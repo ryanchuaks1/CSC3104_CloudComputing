@@ -90,6 +90,16 @@ services:
     networks:
       - app_network
 
+  mongoimport:
+    build:
+      context: ./cloud/mongo-import
+    container_name: mongoimport
+    profiles: ['server', 'all']
+    depends_on:
+      - mongodb
+    networks:
+      - app_network
+
   mongo-express:
     image: mongo-express
     container_name: mongo-express
