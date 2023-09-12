@@ -88,7 +88,7 @@ def main() -> None:
     db = client.get_database()
     while True:
         try:
-            app.run(debug=True)
+            app.run(host="0.0.0.0", port=5000, debug=True)
         except KeyboardInterrupt:
             break
     close_db(client)
