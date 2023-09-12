@@ -1,12 +1,15 @@
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 
 import '../constants/app_constants.dart';
-import '../constants/task_method_constants.dart';
+import '../constants/device_method_constants.dart';
 import '../models/response_model.dart';
-import '../models/task_list_model.dart';
-import '../models/task_model.dart';
+import '../models/device_list_model.dart';
+import '../models/device_model.dart';
+
+final log = Logger('ApiLogger');
 
 class ApiService {
   static final ApiService _apiService = ApiService._init();
@@ -17,14 +20,14 @@ class ApiService {
 
   ApiService._init();
 
-  //add new task
-  Future<Response> addNewTask(Task task) async {
+  //add new device
+  Future<Response> addNewDevice(Device device) async {
     final url = Uri.parse(
-      AppConstants.API_URL + TaskMethodConstants.ADD_NEW_TASK,
+      AppConstants.API_URL + DeviceMethodConstants.ADD_NEW_DEVICE,
     );
     final request = await http.post(
       url,
-      body: jsonEncode(task.toJson()),
+      body: jsonEncode(device.toJson()),
       headers: AppConstants.HEADERS,
     );
     Response response = Response();
@@ -32,7 +35,7 @@ class ApiService {
       if (request.statusCode == 201) {
         response = responseFromJson(request.body);
       } else {
-        print(request.statusCode);
+        log.warning(request.statusCode);
       }
     } catch (e) {
       return Response();
@@ -40,13 +43,13 @@ class ApiService {
     return response;
   }
 
-  //update task
-  Future<Response> updateTask(
-      String name, String description, String id) async {
+  //update device
+  Future<Response> updateDevice(
+      String deviceId, String id) async {
     final json =
-        '{"name" : "$name","description" : "$description","id" : "$id"}';
+        '{"deviceId" : "$deviceId","id" : "$id"}';
     final url =
-        Uri.parse(AppConstants.API_URL + TaskMethodConstants.UPDATE_TASK);
+        Uri.parse(AppConstants.API_URL + DeviceMethodConstants.UPDATE_DEVICE);
     final request =
         await http.post(url, body: json, headers: AppConstants.HEADERS);
     Response response = Response();
@@ -54,7 +57,7 @@ class ApiService {
       if (request.statusCode == 201) {
         response = responseFromJson(request.body);
       } else {
-        print(request.statusCode);
+        log.warning(request.statusCode);
       }
     } catch (e) {
       return Response();
@@ -62,11 +65,11 @@ class ApiService {
     return response;
   }
 
-  //update task
-  Future<Response> deleteTask(String id) async {
+  //update device
+  Future<Response> deleteDevice(String id) async {
     String json = '{"id" : "$id"}';
     final url =
-        Uri.parse(AppConstants.API_URL + TaskMethodConstants.DELETE_TASK);
+        Uri.parse(AppConstants.API_URL + DeviceMethodConstants.DELETE_DEVICE);
     final request =
         await http.post(url, body: json, headers: AppConstants.HEADERS);
     Response response = Response();
@@ -74,7 +77,7 @@ class ApiService {
       if (request.statusCode == 201) {
         response = responseFromJson(request.body);
       } else {
-        print(request.statusCode);
+        log.warning(request.statusCode);
       }
     } catch (e) {
       return Response();
@@ -83,25 +86,25 @@ class ApiService {
   }
 
   //get all data
-  Future<List<TaskList>> getAllTasks() async {
+  Future<List<DeviceList>> getAllDevices() async {
     final url = Uri.parse(
-      AppConstants.API_URL + TaskMethodConstants.LIST_ALL_TASKS,
+      AppConstants.API_URL + DeviceMethodConstants.LIST_ALL_DEVICES,
     );
     final request = await http.get(
       url,
       headers: AppConstants.HEADERS,
     );
-    List<TaskList> tasklist = [];
+    List<DeviceList> devicelist = [];
     try {
       if (request.statusCode == 200) {
-        tasklist = taskListFromJson(request.body);
+        devicelist = deviceListFromJson(request.body);
       } else {
-        print(request.statusCode);
+        log.warning(request.statusCode);
         return const [];
       }
     } catch (e) {
       return const [];
     }
-    return tasklist;
+    return devicelist;
   }
 }

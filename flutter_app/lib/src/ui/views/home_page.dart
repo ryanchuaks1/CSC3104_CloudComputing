@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_app/src/core/constants/message_constants.dart';
 import 'package:flutter_app/src/ui/common/show_toast_message.dart';
 
-import '../../core/models/task_list_model.dart';
-import '../../core/models/task_model.dart';
+import '../../core/models/device_list_model.dart';
+import '../../core/models/device_model.dart';
 import '../../core/services/api_service.dart';
 import '../common/ui_color_helper.dart';
 import '../widgets/custom_card.dart';
@@ -18,22 +18,19 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final _nameController;
-  late final _descriptionController;
-  List<TaskList> _taskList = [];
+  late final _deviceIdController;
+  List<DeviceList> _deviceList = [];
   String _id = "";
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
-    _descriptionController = TextEditingController();
+    _deviceIdController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
+    _deviceIdController.dispose();
     super.dispose();
   }
 
@@ -53,15 +50,15 @@ class _HomePageState extends State<HomePage> {
                 child: CircularProgressIndicator(),
               );
             case ConnectionState.done:
-              _taskList = snapshot.data != null
-                  ? snapshot.data as List<TaskList>
+              _deviceList = snapshot.data != null
+                  ? snapshot.data as List<DeviceList>
                   : const [];
               return showData;
             default:
               return const ErrorOccurred();
           }
         },
-        future: ApiService().getAllTasks(),
+        future: ApiService().getAllDevices(),
       ),
     );
   }
@@ -69,7 +66,7 @@ class _HomePageState extends State<HomePage> {
   PreferredSize get appbar => PreferredSize(
         preferredSize: Size(double.infinity, 50),
         child: AppBar(
-          title: const Text("Task Manager"),
+          title: const Text("Device Manager"),
           centerTitle: true,
           backgroundColor: UIColorHelper.DEFAULT_COLOR,
         ),
@@ -77,42 +74,34 @@ class _HomePageState extends State<HomePage> {
 
   Widget get showData => Column(
         children: <Widget>[
-          newTaskPanel,
+          newDevicePanel,
           crudPanel,
         ],
       );
 
-  Widget get newTaskPanel => TaskPanel(
+  Widget get newDevicePanel => DevicePanel(
         widget: Expanded(
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
               children: <Widget>[
                 MyTextFormField(
-                  label: 'Name',
-                  controller: _nameController,
+                  label: 'Device Id',
+                  controller: _deviceIdController,
                   nextButton: TextInputAction.next,
                 ),
                 const SizedBox(height: 10),
-                MyTextFormField(
-                  label: 'Description',
-                  controller: _descriptionController,
-                  lineCount: 2,
-                  nextButton: TextInputAction.done,
-                ),
-                const SizedBox(height: 10),
-                _taskList.length > 0
+                _deviceList.length > 0
                     ? Expanded(
                         child: ListView.builder(
                           itemBuilder: (context, index) {
                             return showCard(
                               index,
-                              _taskList[index].name,
-                              _taskList[index].description,
-                              _taskList[index].id,
+                              _deviceList[index].deviceId,
+                              _deviceList[index].id,
                             );
                           },
-                          itemCount: _taskList.length,
+                          itemCount: _deviceList.length,
                         ),
                       )
                     : const NoSavedData(),
@@ -127,30 +116,27 @@ class _HomePageState extends State<HomePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
-            Expanded(child: addTaskButton),
-            Expanded(child: updateTaskButton)
+            Expanded(child: addDeviceButton),
+            Expanded(child: updateDeviceButton)
           ],
         ),
       );
 
-  Widget showCard(int index, String name, String description, String id) =>
+  Widget showCard(int index, String deviceId, String id) =>
       GestureDetector(
         onTap: () {
-          _nameController.text = name;
-          _descriptionController.text = description;
+          _deviceIdController.text = deviceId;
           _id = id;
         },
         child: CustomCard(
           index: index + 1,
-          name: name,
-          description: description,
+          deviceId: deviceId,
           function: () async {
             _id = id;
-            await ApiService().deleteTask(_id).then((data) {
+            await ApiService().deleteDevice(_id).then((data) {
               if (data.result == true) {
                 setState(() {
-                  _nameController.clear();
-                  _descriptionController.clear();
+                  _deviceIdController.clear();
                   ShowToastMessage.showCenterShortToast(
                       MessageConstants.BASARILI);
                 });
@@ -162,20 +148,18 @@ class _HomePageState extends State<HomePage> {
         ),
       );
 
-  Widget get addTaskButton => DefaultRaisedButton(
+  Widget get addDeviceButton => DefaultRaisedButton(
         height: 55,
         color: UIColorHelper.DEFAULT_COLOR,
         label: 'Add',
         onPressed: () async {
           await ApiService()
-              .addNewTask(Task(
-                  name: _nameController.text,
-                  description: _descriptionController.text))
+              .addNewDevice(Device(
+                  deviceId: _deviceIdController.text))
               .then((data) {
             if (data.result == true) {
               setState(() {
-                _nameController.clear();
-                _descriptionController.clear();
+                _deviceIdController.clear();
                 ShowToastMessage.showCenterShortToast(
                     MessageConstants.BASARILI);
               });
@@ -186,19 +170,18 @@ class _HomePageState extends State<HomePage> {
         },
       );
 
-  Widget get updateTaskButton => DefaultRaisedButton(
+  Widget get updateDeviceButton => DefaultRaisedButton(
         height: 55,
         label: 'Update',
         color: Colors.cyanAccent,
         onPressed: () async {
           await ApiService()
-              .updateTask(
-                  _nameController.text, _descriptionController.text, _id)
+              .updateDevice(
+                  _deviceIdController.text, _id)
               .then((data) {
             if (data.result == true) {
               setState(() {
-                _nameController.clear();
-                _descriptionController.clear();
+                _deviceIdController.clear();
                 ShowToastMessage.showCenterShortToast(
                     MessageConstants.BASARILI);
               });
@@ -210,10 +193,10 @@ class _HomePageState extends State<HomePage> {
       );
 }
 
-class TaskPanel extends StatelessWidget {
+class DevicePanel extends StatelessWidget {
   final Widget? widget;
 
-  const TaskPanel({Key? key, this.widget}) : super(key: key);
+  const DevicePanel({Key? key, this.widget}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

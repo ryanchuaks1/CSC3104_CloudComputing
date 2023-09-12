@@ -6,14 +6,12 @@ class CustomCard extends StatelessWidget {
   const CustomCard({
     Key? key,
     required this.index,
-    required this.name,
-    required this.description,
+    required this.deviceId,
     required this.function,
   }) : super(key: key);
 
   final int index;
-  final String name;
-  final String description;
+  final String deviceId;
   final void Function() function;
 
   @override
@@ -27,10 +25,10 @@ class CustomCard extends StatelessWidget {
             child: Text(index.toString()),
           ),
           title: Text(
-            name,
+            deviceId,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          subtitle: Text(description),
+          // subtitle: Text(description),
           trailing: IconButton(
             icon: Icon(
               Icons.delete_forever,
