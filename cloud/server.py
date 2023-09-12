@@ -77,7 +77,7 @@ def get_all_devices():
     # Get all devices from the collection
     all_devices = devices_collection.find()
 
-    return {"body": all_devices}, 200
+    return {"body": [i for i in all_devices]}, 200
 
 
 def main() -> None:
