@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from pymongo import MongoClient
+from bson import json_util
 
 # Define the MongoDB connection string
 MONGO_URI = "mongodb://root:password@mongodb:27017/mongo_db?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&retryWrites=true&ssl=false"
@@ -75,9 +76,9 @@ def get_all_devices():
     devices_collection = db.devices
 
     # Get all devices from the collection
-    all_devices = devices_collection.find()
+    all_devices = list(devices_collection.find())
 
-    return {"body": [i for i in all_devices]}, 200
+    return json.loads(json_util.dumps({"body": all_devices})), 200
 
 
 def main() -> None:
