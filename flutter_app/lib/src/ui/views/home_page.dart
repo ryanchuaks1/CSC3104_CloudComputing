@@ -9,6 +9,7 @@ import '../common/ui_color_helper.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/default_custom_button.dart';
 import '../widgets/text_form_field.dart';
+import '../widgets/google_map_widget.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -43,7 +44,7 @@ class _HomePageState extends State<HomePage> {
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.none:
-              return ErrorOccurred();
+              return const ErrorOccurred();
             case ConnectionState.active:
             case ConnectionState.waiting:
               return const Center(
@@ -74,6 +75,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget get showData => Column(
         children: <Widget>[
+          Expanded(child: GoogleMapWidget()),
           newDevicePanel,
           crudPanel,
         ],
@@ -122,8 +124,7 @@ class _HomePageState extends State<HomePage> {
         ),
       );
 
-  Widget showCard(int index, String deviceId, String id) =>
-      GestureDetector(
+  Widget showCard(int index, String deviceId, String id) => GestureDetector(
         onTap: () {
           _deviceIdController.text = deviceId;
           _id = id;
@@ -154,8 +155,7 @@ class _HomePageState extends State<HomePage> {
         label: 'Add',
         onPressed: () async {
           await ApiService()
-              .addNewDevice(Device(
-                  deviceId: _deviceIdController.text))
+              .addNewDevice(Device(deviceId: _deviceIdController.text))
               .then((data) {
             if (data.result == true) {
               setState(() {
@@ -176,8 +176,7 @@ class _HomePageState extends State<HomePage> {
         color: Colors.cyanAccent,
         onPressed: () async {
           await ApiService()
-              .updateDevice(
-                  _deviceIdController.text, _id)
+              .updateDevice(_deviceIdController.text, _id)
               .then((data) {
             if (data.result == true) {
               setState(() {
