@@ -14,33 +14,37 @@ class GoogleMapWidget extends StatefulWidget {
 class MapState extends State<GoogleMapWidget> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
+  final Location location = Location();
 
-  static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.42796133580664, -122.085749655962),
-    zoom: 14.4746,
+  static const CameraPosition _initialPosition = CameraPosition(
+    target: LatLng(
+        1.380000, 103.800000), // Singapore TODO: Change to current location
+    zoom: 11,
   );
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: GoogleMap(
-        mapType: MapType.hybrid,
-        initialCameraPosition: _kGooglePlex,
+        mapType: MapType.normal,
+        initialCameraPosition: _initialPosition,
         onMapCreated: (GoogleMapController controller) {
           _controller.complete(controller);
         },
+        zoomControlsEnabled: false,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _centerToCurrentLocation, // Updated onPressed function
-        label: const Text('Center to Current Location'), // Updated button label
-        icon: const Icon(Icons.my_location), // Updated button icon
+      // Center map button on the btm right
+      floatingActionButton: FloatingActionButton(
+        onPressed: _centerToCurrentLocation,
+        backgroundColor: Colors.green,
+        child: const Icon(Icons.my_location),
       ),
     );
   }
 
+  // Center the map to the current location when the button is pressed
   Future<void> _centerToCurrentLocation() async {
     final GoogleMapController controller = await _controller.future;
-    final Location location = Location();
     try {
       final LocationData currentLocation = await location.getLocation();
       final LatLng currentLatLng =
@@ -49,7 +53,7 @@ class MapState extends State<GoogleMapWidget> {
       // Center the map to the current location
       await controller.animateCamera(CameraUpdate.newLatLng(currentLatLng));
     } catch (e) {
-      print("Error getting location: $e");
+      print("Error getting location: $e"); //TODO: Error popup instead
     }
   }
 }

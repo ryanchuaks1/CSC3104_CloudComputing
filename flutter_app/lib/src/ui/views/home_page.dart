@@ -39,7 +39,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: appbar,
       body: FutureBuilder(
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
@@ -64,16 +63,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  PreferredSize get appbar => PreferredSize(
-        preferredSize: Size(double.infinity, 50),
-        child: AppBar(
-          title: const Text("Device Manager"),
-          centerTitle: true,
-          backgroundColor: UIColorHelper.DEFAULT_COLOR,
-        ),
-      );
-
   Widget get showData => Column(
+        // This is the actual body of the page
         children: <Widget>[
           Expanded(child: GoogleMapWidget()),
           newDevicePanel,
@@ -87,13 +78,25 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.all(12),
             child: Column(
               children: <Widget>[
+// ------------------------------TO DELETE-------------------------------------
                 MyTextFormField(
                   label: 'Device Id',
                   controller: _deviceIdController,
                   nextButton: TextInputAction.next,
                 ),
+// ----------------------------------------------------------------------------
+// ------------- FAB button to add new device ---------------------------------
+                FloatingActionButton(
+                  onPressed: () async {
+                    await _showAddDeviceDialog(
+                        context); // Use 'await' since _showAddDeviceDialog is async
+                  },
+                  backgroundColor: Colors.green,
+                  child: const Icon(Icons.add),
+                ),
+// ------------- FAB button to add new device ---------------------------------
                 const SizedBox(height: 10),
-                _deviceList.length > 0
+                _deviceList.isNotEmpty
                     ? Expanded(
                         child: ListView.builder(
                           itemBuilder: (context, index) {
@@ -155,7 +158,11 @@ class _HomePageState extends State<HomePage> {
         label: 'Add',
         onPressed: () async {
           await ApiService()
-              .addNewDevice(Device(deviceId: _deviceIdController.text, deviceName: "", latitude: 0, longitude: 0))
+              .addNewDevice(Device(
+                  deviceId: _deviceIdController.text,
+                  deviceName: "",
+                  latitude: 0,
+                  longitude: 0))
               .then((data) {
             if (data.result == true) {
               setState(() {
@@ -238,4 +245,44 @@ class NoSavedData extends StatelessWidget {
       ],
     );
   }
+}
+
+Future<void> _showAddDeviceDialog(BuildContext context) async {
+  final TextEditingController _deviceIdController = TextEditingController();
+
+  return showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text('Add New Device'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            TextFormField(
+              controller: _deviceIdController,
+              decoration: InputDecoration(labelText: 'Device Id'),
+            ),
+            // Add other input fields as needed
+          ],
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('Save'),
+            onPressed: () {
+              // Handle saving the data here
+              // Access the entered device ID using _deviceIdController.text
+              // Add your logic to save the data or update the UI accordingly
+              Navigator.of(context).pop(); // Close the dialog
+            },
+          ),
+        ],
+      );
+    },
+  );
 }
