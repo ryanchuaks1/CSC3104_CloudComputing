@@ -155,7 +155,7 @@ class _HomePageState extends State<HomePage> {
         label: 'Add',
         onPressed: () async {
           await ApiService()
-              .addNewDevice(Device(deviceId: _deviceIdController.text))
+              .addNewDevice(Device(deviceId: _deviceIdController.text, deviceName: "", latitude: 0, longitude: 0))
               .then((data) {
             if (data.result == true) {
               setState(() {
