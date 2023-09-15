@@ -5,10 +5,8 @@ import 'package:flutter_app/src/ui/common/show_toast_message.dart';
 import '../../core/models/device_list_model.dart';
 import '../../core/models/device_model.dart';
 import '../../core/services/api_service.dart';
-import '../common/ui_color_helper.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/default_custom_button.dart';
-import '../widgets/text_form_field.dart';
 import '../widgets/google_map_widget.dart';
 
 class HomePage extends StatefulWidget {
@@ -43,17 +41,17 @@ class _HomePageState extends State<HomePage> {
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.none:
-              return const ErrorOccurred();
+              return const ErrorOccurred(); // Cant connect to the API
             case ConnectionState.active:
             case ConnectionState.waiting:
               return const Center(
-                child: CircularProgressIndicator(),
+                child: CircularProgressIndicator(), // Loader animation
               );
             case ConnectionState.done:
               _deviceList = snapshot.data != null
                   ? snapshot.data as List<DeviceList>
                   : const [];
-              return showData;
+              return showData; // Show the actual body of the page
             default:
               return const ErrorOccurred();
           }
@@ -66,9 +64,9 @@ class _HomePageState extends State<HomePage> {
   Widget get showData => Column(
         // This is the actual body of the page
         children: <Widget>[
-          Expanded(child: GoogleMapWidget()),
+          const Expanded(child: GoogleMapWidget()),
           newDevicePanel,
-          crudPanel,
+          // updateDeviceButton,
         ],
       );
 
@@ -78,23 +76,6 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.all(12),
             child: Column(
               children: <Widget>[
-// ------------------------------TO DELETE-------------------------------------
-                MyTextFormField(
-                  label: 'Device Id',
-                  controller: _deviceIdController,
-                  nextButton: TextInputAction.next,
-                ),
-// ----------------------------------------------------------------------------
-// ------------- FAB button to add new device ---------------------------------
-                FloatingActionButton(
-                  onPressed: () async {
-                    await _showAddDeviceDialog(
-                        context); // Use 'await' since _showAddDeviceDialog is async
-                  },
-                  backgroundColor: Colors.green,
-                  child: const Icon(Icons.add),
-                ),
-// ------------- FAB button to add new device ---------------------------------
                 const SizedBox(height: 10),
                 _deviceList.isNotEmpty
                     ? Expanded(
@@ -103,6 +84,9 @@ class _HomePageState extends State<HomePage> {
                             return showCard(
                               index,
                               _deviceList[index].deviceId,
+                              _deviceList[index].deviceName,
+                              _deviceList[index].latitude,
+                              _deviceList[index].longitude,
                               _deviceList[index].id,
                             );
                           },
@@ -110,24 +94,33 @@ class _HomePageState extends State<HomePage> {
                         ),
                       )
                     : const NoSavedData(),
+                ElevatedButton(
+                  onPressed: () async {
+                    await _showAddDeviceDialog(context, () {
+                      setState(
+                          () {}); // refresh the page after dialog is closed
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                  child: const Icon(Icons.add),
+                )
               ],
             ),
           ),
         ),
       );
 
-  Widget get crudPanel => Padding(
-        padding: const EdgeInsets.only(bottom: 15),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: <Widget>[
-            Expanded(child: addDeviceButton),
-            Expanded(child: updateDeviceButton)
-          ],
-        ),
-      );
-
-  Widget showCard(int index, String deviceId, String id) => GestureDetector(
+  Widget showCard(
+    int index,
+    String deviceId,
+    String deviceName,
+    double latitude,
+    double longitude,
+    String id,
+  ) =>
+      GestureDetector(
         onTap: () {
           _deviceIdController.text = deviceId;
           _id = id;
@@ -135,6 +128,9 @@ class _HomePageState extends State<HomePage> {
         child: CustomCard(
           index: index + 1,
           deviceId: deviceId,
+          deviceName: deviceName,
+          latitude: latitude,
+          longitude: longitude,
           function: () async {
             _id = id;
             await ApiService().deleteDevice(_id).then((data) {
@@ -150,31 +146,6 @@ class _HomePageState extends State<HomePage> {
             });
           },
         ),
-      );
-
-  Widget get addDeviceButton => DefaultRaisedButton(
-        height: 55,
-        color: UIColorHelper.DEFAULT_COLOR,
-        label: 'Add',
-        onPressed: () async {
-          await ApiService()
-              .addNewDevice(Device(
-                  deviceId: _deviceIdController.text,
-                  deviceName: "",
-                  latitude: 0,
-                  longitude: 0))
-              .then((data) {
-            if (data.result == true) {
-              setState(() {
-                _deviceIdController.clear();
-                ShowToastMessage.showCenterShortToast(
-                    MessageConstants.BASARILI);
-              });
-            } else {
-              ShowToastMessage.showCenterShortToast(MessageConstants.HATA);
-            }
-          });
-        },
       );
 
   Widget get updateDeviceButton => DefaultRaisedButton(
@@ -226,29 +197,32 @@ class NoSavedData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return const Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        const Icon(
+        Icon(
           Icons.airline_seat_individual_suite,
           size: 55,
         ),
-        const SizedBox(height: 15),
+        SizedBox(height: 10),
         Text(
           MessageConstants.NO_SAVED_DATA,
-          style: const TextStyle(
+          style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 24,
             color: Colors.red,
           ),
         ),
+        Padding(padding: EdgeInsets.all(8)),
       ],
     );
   }
 }
 
-Future<void> _showAddDeviceDialog(BuildContext context) async {
+Future<void> _showAddDeviceDialog(
+    BuildContext context, Function() onDialogDismissed) async {
   final TextEditingController _deviceIdController = TextEditingController();
+  final TextEditingController _deviceNameController = TextEditingController();
 
   return showDialog(
     context: context,
@@ -262,7 +236,10 @@ Future<void> _showAddDeviceDialog(BuildContext context) async {
               controller: _deviceIdController,
               decoration: InputDecoration(labelText: 'Device Id'),
             ),
-            // Add other input fields as needed
+            TextFormField(
+              controller: _deviceNameController,
+              decoration: InputDecoration(labelText: 'Device Name'),
+            ),
           ],
         ),
         actions: <Widget>[
@@ -274,11 +251,27 @@ Future<void> _showAddDeviceDialog(BuildContext context) async {
           ),
           TextButton(
             child: Text('Save'),
-            onPressed: () {
-              // Handle saving the data here
-              // Access the entered device ID using _deviceIdController.text
-              // Add your logic to save the data or update the UI accordingly
-              Navigator.of(context).pop(); // Close the dialog
+            onPressed: () async {
+              await ApiService()
+                  .addNewDevice(Device(
+                      deviceId: _deviceIdController.text,
+                      deviceName: _deviceNameController.text,
+                      latitude: 0,
+                      longitude: 0))
+                  .then((data) {
+                if (data.result == true) {
+                  _deviceIdController.clear();
+                  _deviceNameController.clear();
+                  ShowToastMessage.showCenterShortToast(
+                      MessageConstants.BASARILI);
+                  Navigator.of(context).pop(); // DRY?
+                  onDialogDismissed(); // DRY?
+                } else {
+                  ShowToastMessage.showCenterShortToast(MessageConstants.HATA);
+                  Navigator.of(context).pop(); // DRY?
+                  onDialogDismissed(); // DRY?
+                }
+              });
             },
           ),
         ],

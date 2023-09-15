@@ -32,6 +32,8 @@ class MapState extends State<GoogleMapWidget> {
           _controller.complete(controller);
         },
         zoomControlsEnabled: false,
+        myLocationEnabled: true,
+        myLocationButtonEnabled: false, // TODO: Replace with custom bubble
       ),
       // Center map button on the btm right
       floatingActionButton: FloatingActionButton(
@@ -50,8 +52,13 @@ class MapState extends State<GoogleMapWidget> {
       final LatLng currentLatLng =
           LatLng(currentLocation.latitude!, currentLocation.longitude!);
 
-      // Center the map to the current location
-      await controller.animateCamera(CameraUpdate.newLatLng(currentLatLng));
+      // Adjust the zoom level as per your preference (e.g., 15.0 for a little zoom)
+      const double zoomLevel = 14;
+
+      // Center the map to the current location with zoom
+      await controller.animateCamera(
+        CameraUpdate.newLatLngZoom(currentLatLng, zoomLevel),
+      );
     } catch (e) {
       print("Error getting location: $e"); //TODO: Error popup instead
     }
