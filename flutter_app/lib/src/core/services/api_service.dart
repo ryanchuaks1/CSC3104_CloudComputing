@@ -47,7 +47,7 @@ class ApiService {
   Future<Response> updateDevice(
       String deviceId, String id) async {
     final json =
-        '{"deviceId" : "$deviceId","id" : "$id"}';
+        '{"deviceId" : "$deviceId","_id" : "$id"}';
     final url =
         Uri.parse(AppConstants.API_URL + DeviceMethodConstants.UPDATE_DEVICE);
     final request =
@@ -67,7 +67,7 @@ class ApiService {
 
   //update device
   Future<Response> deleteDevice(String id) async {
-    String json = '{"id" : "$id"}';
+    String json = '{"_id" : "$id"}';
     final url =
         Uri.parse(AppConstants.API_URL + DeviceMethodConstants.DELETE_DEVICE);
     final request =

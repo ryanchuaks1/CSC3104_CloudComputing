@@ -14,7 +14,7 @@ class DeviceList {
     String deviceId;
 
     factory DeviceList.fromJson(Map<String, dynamic> json) => DeviceList(
-        id: json["_id"],
+        id: json["_id"]["\$oid"],
         deviceId: json["deviceId"],
     );
 

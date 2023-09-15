@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS, cross_origin
 from pymongo import MongoClient
 from bson import json_util
+from bson.objectid import ObjectId
 import json
 
 # Define the MongoDB connection string
@@ -8,6 +10,8 @@ MONGO_URI = "mongodb://root:password@mongodb:27017/mongo_db?authSource=admin&rea
 
 # Create the Flask app
 app = Flask(__name__)
+cors = CORS(app)
+app.config["CORS_HEADERS"] = "Content-Type"
 db = None
 
 
@@ -32,6 +36,7 @@ def close_db(client: MongoClient) -> None:
 
 
 @app.route("/api/addNewDevice", methods=["POST"])
+@cross_origin()
 def add_new_device():
     global db
     device_data = request.get_json()
@@ -45,41 +50,44 @@ def add_new_device():
 
 
 @app.route("/api/updateDevice", methods=["POST"])
+@cross_origin()
 def update_device():
     global db
     device_data = request.get_json()
     devices_collection = db.devices
 
     # Update the existing device in the collection
-    update_query = {"_id": device_data["id"]}
-    update_data = {"deviceId": device_data["deviceId"]}
+    update_query = {"_id": ObjectId(device_data["_id"])}
+    update_data = {"$set": {"deviceId": device_data["deviceId"]}}
     devices_collection.update_one(update_query, update_data)
 
     return {"result": True, "message": "Device updated successfully!"}, 201
 
 
 @app.route("/api/deleteDevice", methods=["POST"])
+@cross_origin()
 def delete_device():
     global db
     device_data = request.get_json()
     devices_collection = db.devices
 
     # Delete the device from the collection
-    delete_query = {"_id": device_data["id"]}
+    delete_query = {"_id": ObjectId(device_data["_id"])}
     devices_collection.delete_one(delete_query)
 
     return {"result": True, "message": "Device deleted successfully!"}, 201
 
 
 @app.route("/api/getAllDevices")
+@cross_origin()
 def get_all_devices():
     global db
     devices_collection = db.devices
 
     # Get all devices from the collection
-    all_devices = list(devices_collection.find())
+    all_devices = [json.loads(json_util.dumps(device)) for device in devices_collection.find()]
 
-    return json.loads(json_util.dumps({"body": all_devices})), 200
+    return all_devices, 200
 
 
 def main() -> None:
