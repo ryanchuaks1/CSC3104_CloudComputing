@@ -43,7 +43,7 @@ def add_new_device():
     devices_collection = db.devices
 
     # Add the new device to the collection
-    new_device = {"deviceId": device_data["deviceId"]}
+    new_device = {"deviceId": device_data["deviceId"], "deviceName": device_data["deviceName"], "latitude": device_data["latitude"], "longitude": device_data["longitude"]}
     devices_collection.insert_one(new_device)
 
     return {"result": True, "message": "Device added successfully!"}, 201
