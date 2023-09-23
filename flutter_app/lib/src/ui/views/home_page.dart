@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 import 'package:flutter_app/src/core/constants/message_constants.dart';
 import 'package:flutter_app/src/ui/common/show_toast_message.dart';
 
@@ -221,8 +222,8 @@ class NoSavedData extends StatelessWidget {
 
 Future<void> _showAddDeviceDialog(
     BuildContext context, Function() onDialogDismissed) async {
-  final TextEditingController _deviceIdController = TextEditingController();
   final TextEditingController _deviceNameController = TextEditingController();
+  const uuid = Uuid();
 
   return showDialog(
     context: context,
@@ -232,10 +233,6 @@ Future<void> _showAddDeviceDialog(
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            TextFormField(
-              controller: _deviceIdController,
-              decoration: InputDecoration(labelText: 'Device Id'),
-            ),
             TextFormField(
               controller: _deviceNameController,
               decoration: InputDecoration(labelText: 'Device Name'),
@@ -254,13 +251,12 @@ Future<void> _showAddDeviceDialog(
             onPressed: () async {
               await ApiService()
                   .addNewDevice(Device(
-                      deviceId: _deviceIdController.text,
+                      deviceId: uuid.v4(),
                       deviceName: _deviceNameController.text,
                       latitude: 0,
                       longitude: 0))
                   .then((data) {
                 if (data.result == true) {
-                  _deviceIdController.clear();
                   _deviceNameController.clear();
                   ShowToastMessage.showCenterShortToast(
                       MessageConstants.BASARILI);
