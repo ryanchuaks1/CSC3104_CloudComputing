@@ -1,0 +1,13 @@
+{
+    "name": "kafkajs-producer",
+    "version": "1.0",
+    "description": "KafkaJS producer",
+    "author": "Anonymous",
+    "main": "producer.js",
+    "scripts": {
+        "start": "node producer.js"
+    },
+    "dependencies": {
+        "kafkajs": "^2.2.4"
+    }
+}

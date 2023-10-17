@@ -1,0 +1,13 @@
+{
+    "name": "kafkajs-consumer",
+    "version": "1.0",
+    "description": "KafkaJS consumer",
+    "author": "Anonymous",
+    "main": "consumer.js",
+    "scripts": {
+        "start": "node consumer.js"
+    },
+    "dependencies": {
+        "kafkajs": "^2.2.4"
+    }
+}
