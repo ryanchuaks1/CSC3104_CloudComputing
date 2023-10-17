@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package device;
+
+// Device definition
+service Device {
+  rpc add_new_device (Item) returns (Reply) {}
+  rpc update_device (Item) returns (Reply) {}
+  rpc delete_device (Item) returns (Reply) {}
+  rpc get_all_devices (Item) returns (Reply) {}
+}
+
+// Item message
+message Item {
+  string _id = 1;
+  string deviceId = 2;
+  string deviceName = 3;
+  string latitude = 4;
+  string longitude = 5;
+}
+
+message Reply {
+  string result = 1;
+  string message = 2;
+  repeated Item items = 3;
+}
+
