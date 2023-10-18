@@ -13,8 +13,6 @@ class Device(device_pb2_grpc.DeviceServicer):
         # Define the MongoDB connection string
         self.MONGO_URI = "mongodb://root:password@mongodb:27017/mongo_db?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&retryWrites=true&ssl=false"
 
-
-    def connect_db(self) -> None:
         # Connect to the MongoDB database
         try:
             # Connect to MongoDB
@@ -25,12 +23,6 @@ class Device(device_pb2_grpc.DeviceServicer):
 
         # Get the database
         self.db = self.client.get_database()
-
-
-    def close_db(self) -> None:
-        if self.client:
-            # Close the connection when done
-            self.client.close()
 
 
     def add_new_device(self, request, context):
