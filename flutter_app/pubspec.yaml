@@ -15,6 +15,7 @@ dependencies:
   logging: ^1.2.0
   http: ^1.0.0
   uuid: ^4.0.0
+  flutter_svg: any
   google_maps_flutter: ^2.5.0
   location: ^5.0.0
   flutter:
@@ -36,3 +37,4 @@ flutter:
   assets:
     # Add assets from the images directory to the application.
     - assets/images/
+    - assets/icons/
