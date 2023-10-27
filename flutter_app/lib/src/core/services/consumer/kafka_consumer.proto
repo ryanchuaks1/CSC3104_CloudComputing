@@ -4,7 +4,7 @@ package kafka_consumer_grpc;
 
 // service definition
 service Kafka_Consumer_gRPC{
-    rpc Subscribe (Subscribe_Data) returns (stream Location_Data) {}
+    rpc Subscribe (Subscribe_Data) returns (Location_Data) {}
     // /rpc Last_Location (Location_Data) returns (Response_Data) {}
 }
 
@@ -22,5 +22,5 @@ message Location_Data{
 
 // message Response_Data{
 //     string udid = 1;
-//     bool success = 2;
+//     bool success = 1;
 // }

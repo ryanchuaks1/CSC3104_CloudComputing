@@ -32,8 +32,8 @@ class Kafka_Consumer_gRPCClient extends $grpc.Client {
       : super(channel, options: options,
         interceptors: interceptors);
 
-  $grpc.ResponseStream<$0.Location_Data> subscribe($0.Subscribe_Data request, {$grpc.CallOptions? options}) {
-    return $createStreamingCall(_$subscribe, $async.Stream.fromIterable([request]), options: options);
+  $grpc.ResponseFuture<$0.Location_Data> subscribe($0.Subscribe_Data request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$subscribe, request, options: options);
   }
 }
 
@@ -46,14 +46,14 @@ abstract class Kafka_Consumer_gRPCServiceBase extends $grpc.Service {
         'Subscribe',
         subscribe_Pre,
         false,
-        true,
+        false,
         ($core.List<$core.int> value) => $0.Subscribe_Data.fromBuffer(value),
         ($0.Location_Data value) => value.writeToBuffer()));
   }
 
-  $async.Stream<$0.Location_Data> subscribe_Pre($grpc.ServiceCall call, $async.Future<$0.Subscribe_Data> request) async* {
-    yield* subscribe(call, await request);
+  $async.Future<$0.Location_Data> subscribe_Pre($grpc.ServiceCall call, $async.Future<$0.Subscribe_Data> request) async {
+    return subscribe(call, await request);
   }
 
-  $async.Stream<$0.Location_Data> subscribe($grpc.ServiceCall call, $0.Subscribe_Data request);
+  $async.Future<$0.Location_Data> subscribe($grpc.ServiceCall call, $0.Subscribe_Data request);
 }

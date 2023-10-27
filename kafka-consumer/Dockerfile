@@ -12,3 +12,5 @@ RUN npm install
 
 #bundle app source
 COPY . .
+
+EXPOSE 50051

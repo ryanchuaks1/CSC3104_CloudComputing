@@ -18,8 +18,10 @@ void main() async {
   print("Print Hello...\n");
   try {
     KafkaConsumerHandler handler = KafkaConsumerHandler();
-    if (handler.startConsumerService('127.0.0.1:50051')) {
-      handler.initSubscription("f1740855-6716-11ee-9b42-107b44");
+    if (handler.startConsumerService('127.0.0.1', 50051)) {
+      await handler.initSubscription("f1740855-6716-11ee-9b42-107b44");
+      handler.closeConnection();
+      
     }
   } catch (error) {
     print("Error Executing");
@@ -32,11 +34,13 @@ class KafkaConsumerHandler
   late Kafka_Consumer_gRPCClient _stub;
   late ClientChannel channel;
 
-  bool startConsumerService(String KafkaServerIp) 
+  bool startConsumerService(String KafkaServerIp, int portNumber) 
   {
     try {
       channel = ClientChannel(KafkaServerIp,
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()));
+        port: portNumber,
+        options:
+            const ChannelOptions(credentials: ChannelCredentials.insecure()));
 
       _stub = Kafka_Consumer_gRPCClient(channel);
       return true;
@@ -52,13 +56,15 @@ class KafkaConsumerHandler
   {
     final params = Subscribe_Data()..udid=deviceId;
 
-    final stream = _stub.subscribe(params);
+    final stream = await _stub.subscribe(params);
 
-    await for (var message in stream) {
-      // Process the received message as needed
-      print('Received message: ${message.udid} , ${message.timestamp}, ${message.location}');
-      // You can assign the message to a variable or use it for other services here.
-    }
+    print('Greeter client received: ${stream.udid}, ${stream.timestamp}, ${stream.location}');
+
+    // await for (var message1 in stream) {
+    //   // Process the received message as needed
+    //   print('Received message: ${message1.udid} , ${message1.timestamp}, ${message1.location}');
+    //   // You can assign the message to a variable or use it for other services here.
+    // }
   }
 
   Future<void> closeConnection() async

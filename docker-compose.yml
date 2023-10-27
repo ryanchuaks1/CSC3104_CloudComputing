@@ -165,6 +165,8 @@ services:
     container_name: consumer-service
     networks:
       - location-system
+    ports:
+      - '50051:50051'
     depends_on:
       - kafka
       - producer-service
