@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_app/components/rounded_button.dart';
 import 'package:flutter_app/constants.dart';
-import 'package:flutter_app/src/ui/components/background.dart';
+import 'package:flutter_app/src/ui/views/Login/login_page.dart';
+import 'package:flutter_app/src/ui/views/Signup/signup_page.dart';
+import 'package:flutter_app/src/ui/views/Welcome/components/background.dart';
 import 'package:flutter_svg/svg.dart';
 
 class Body extends StatelessWidget {
@@ -19,12 +21,26 @@ class Body extends StatelessWidget {
             SvgPicture.asset("assets/icons/chat.svg",
                 height: size.height * 0.45),
             SizedBox(height: size.height * 0.05),
-            RoundedButton(text: "LOGIN", press: () {}),
             RoundedButton(
-                text: "SIGNUP",
-                color: kPrimaryLightColor,
-                textColor: Colors.black,
-                press: () {})
+              text: "LOGIN",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+            ),
+            RoundedButton(
+              text: "SIGNUP",
+              color: kPrimaryLightColor,
+              textColor: Colors.black,
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SignUpPage()),
+                );
+              },
+            )
           ]),
     ));
   }
