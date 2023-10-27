@@ -3,16 +3,16 @@ import 'package:flutter_app/components/already_have_an_account_check.dart';
 import 'package:flutter_app/components/rounded_button.dart';
 import 'package:flutter_app/components/rounded_input_field.dart';
 import 'package:flutter_app/components/rounded_password_field.dart';
-import 'package:flutter_app/components/text_field_container.dart';
-import 'package:flutter_app/constants.dart';
-import 'package:flutter_app/src/ui/views/Login/components/background.dart';
-import 'package:flutter_app/src/ui/views/Signup/signup_page.dart';
-import 'package:flutter_app/src/ui/views/home_page.dart';
+import 'package:flutter_app/src/ui/views/Login/login_page.dart';
+import 'package:flutter_app/src/ui/views/Signup/components/background.dart';
 import 'package:flutter_svg/svg.dart';
 
 class Body extends StatelessWidget {
+  final Widget child;
+
   const Body({
     super.key,
+    required this.child,
   });
 
   @override
@@ -23,33 +23,36 @@ class Body extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text("LOGIN", style: TextStyle(fontWeight: FontWeight.bold)),
-          SizedBox(height: size.height * 0.03),
-          SvgPicture.asset(
-            "assets/icons/login.svg",
-            height: size.height * 0.35,
+          Text(
+            "SIGNUP",
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
           SizedBox(height: size.height * 0.03),
-          RoundedInputField(hintText: "Your Email", onChanged: (value) {}),
-          RoundedPasswordField(onChanged: (value) {}),
+          SvgPicture.asset(
+            "assets/icons/signup.svg",
+            height: size.height * 0.35,
+          ),
+          RoundedInputField(
+            hintText: "Your Email",
+            onChanged: (value) {},
+          ),
+          RoundedPasswordField(
+            onChanged: (value) {},
+          ),
           RoundedButton(
-            text: "LOGIN",
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const HomePage()),
-              );
-            },
+            text: "SIGNUP",
+            onPressed: () {},
           ),
           SizedBox(height: size.height * 0.03),
           AlreadyHaveAnAccountCheck(
+            login: false,
             press: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SignUpPage()),
+                MaterialPageRoute(builder: (context) => const LoginPage()),
               );
             },
-          )
+          ),
         ],
       ),
     ));
