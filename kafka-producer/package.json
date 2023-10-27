@@ -8,6 +8,7 @@
         "start": "node producer.js"
     },
     "dependencies": {
-        "kafkajs": "^2.2.4"
+        "kafkajs": "^2.2.4",
+        "@grpc/grpc-js": "^1.9.7"
     }
 }
