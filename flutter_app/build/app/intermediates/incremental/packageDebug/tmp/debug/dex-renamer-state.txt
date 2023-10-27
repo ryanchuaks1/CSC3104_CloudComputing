@@ -1,0 +1,4 @@
+#Thu Oct 12 20:15:55 SGT 2023
+base.0=/Users/cezaartan/Desktop/University/SIT/CSC3104 - Cloud and Distributed Computing/CSC3104_CloudComputing/flutter_app/build/app/intermediates/dex/debug/mergeDexDebug/classes.dex
+path.0=classes.dex
+renamed.0=classes.dex
