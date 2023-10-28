@@ -21,12 +21,14 @@ void main() async {
   print("Start Program...\n");
 
   try {
-    KafkaProducerHandler handler = KafkaProducerHandler();
+    KafkaProducerHandler handler = KafkaProducerHandler("f1740855-6716-11ee-9b42-107b44");
     if (handler.startProducerService('127.0.0.1', 50054)) {
+
+      //Create a device topic before publishing onto it
+      await handler.createDeviceTopic();
       
       Timer.periodic(Duration(seconds: 1), (timer) {
-      // Replace this function with the one you want to run every second.
-        handler.publishCurrentLocation("f1740855-6716-11ee-9b42-107b44", "12:00:00", "10.000, 20.000");  
+        handler.publishCurrentLocation("10.000, 20.000");  
       });
 
       // Not sure if need to close the connection
@@ -44,14 +46,26 @@ class KafkaProducerHandler
   //Class Variables
   late Kafka_Producer_gRPCClient _stub;
   late ClientChannel channel;
+  late String _deviceID;
+
+  KafkaProducerHandler(String deviceID)
+  {
+    _deviceID = deviceID;
+  }
+
+  // Mutator
+  String getDeviceId()
+  {
+    return _deviceID;
+  }
 
   //Initialising gRPC connection with the consumer server
-  bool startProducerService(String KafkaServerIp, int portNumber) 
+  bool startProducerService(String kafkaServerIp, int portNumber) 
   {
     try {
 
       //Create the Channel
-      channel = ClientChannel(KafkaServerIp,
+      channel = ClientChannel(kafkaServerIp,
         port: portNumber,
         options:
             const ChannelOptions(credentials: ChannelCredentials.insecure()));
@@ -68,13 +82,25 @@ class KafkaProducerHandler
   }
 
   //Ask the Server to publish the location and timestamp to the topic which is the deviceID
-  Future<void> publishCurrentLocation(String deviceID, String currTimeStamp, String currLocation) async
+  Future<bool> publishCurrentLocation(String currLocation) async
   {
-    final params = Location_Data()..udid=deviceID..timestamp=currTimeStamp..location=currLocation;
+    final params = Location()..udid=_deviceID..location=currLocation;
 
-    final success = await _stub.publish(params);
+    final reply = await _stub.add_New_Location(params);
 
-    print("Success: ${success}");
+    print("Success: ${reply.success}");
+
+    return reply.success;
+  }
+
+  //Ask the Server to create a topic for the current device
+  Future<bool> createDeviceTopic() async
+  {
+    final params = Topic()..udid=_deviceID;
+
+    final reply = await _stub.add_New_Topic(params);
+
+    return reply.success;
   }
 
   //This function is to close the channel
