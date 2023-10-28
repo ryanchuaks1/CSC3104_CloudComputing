@@ -5,7 +5,7 @@
     "author": "Anonymous",
     "main": "producer.js",
     "scripts": {
-        "start": "node producer.js"
+        "start": "node producer-grpc-server.js"
     },
     "dependencies": {
         "kafkajs": "^2.2.4",

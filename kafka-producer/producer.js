@@ -31,13 +31,15 @@ class Kafka_Producer{
     }
 }
 
-kafka_producer = new Kafka_Producer("f1740855-6716-11ee-9b42-107b44", "kafka-producer");
+module.exports = { Kafka_Producer };
 
-const interval = 5000; // milliseconds
+// kafka_producer = new Kafka_Producer("f1740855-6716-11ee-9b42-107b44", "kafka-producer");
 
-setInterval(() => {
-    kafka_producer.update_location('1.377476301551542, 103.84873335110395');
-}, interval)
+// const interval = 5000; // milliseconds
+
+// setInterval(() => {
+//     kafka_producer.update_location('1.377476301551542, 103.84873335110395');
+// }, interval)
 
 // const uuid = "f1740855-6716-11ee-9b42-107b44"
 

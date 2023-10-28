@@ -12,8 +12,9 @@ class Kafka_Admin{
         var topic_exist = false;
         try{
             await this._admin.connect();
-            const { topics } = await this._admin.listTopics();
-    
+            const topics = await this._admin.listTopics();
+            
+            console.log("List of topics: " + topics);
             if(topics.includes(udid)){
                 topic_exist = true;
             }
@@ -58,25 +59,27 @@ class Kafka_Admin{
     }
 }
 
-async function main(){
-    const udid = "f1740855-6716-11ee-9b42-107b44";
-    kafka_admin = new Kafka_Admin('kafka-admin');
-    
-    await kafka_admin.add_new_topic(udid);
+module.exports = { Kafka_Admin };
 
-    setTimeout(async () => {
-        var topic_exist = await kafka_admin.check_topic(udid);
+// async function main(){
+//     const udid = "f1740855-6716-11ee-9b42-107b44";
+//     kafka_admin = new Kafka_Admin('kafka-admin');
     
-        if(topic_exist){
-            console.log("The topic exists!");
-        }
-        else{
-            console.log("The topic does not exist!");
-        }
-    }, 5000);
-}
+//     await kafka_admin.add_new_topic(udid);
 
-main();
+//     setTimeout(async () => {
+//         var topic_exist = await kafka_admin.check_topic(udid);
+    
+//         if(topic_exist){
+//             console.log("The topic exists!");
+//         }
+//         else{
+//             console.log("The topic does not exist!");
+//         }
+//     }, 5000);
+// }
+
+// main();
 
 // const udid = "f1740855-6716-11ee-9b42-107b44"
 

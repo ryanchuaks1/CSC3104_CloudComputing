@@ -117,7 +117,7 @@ services:
     networks:
       - app_network
 
-# Kafka
+# Kafka Services
 
   kafka:
     image: bitnami/kafka:3.5
@@ -179,22 +179,24 @@ services:
     container_name: producer-service
     networks:
       - location-system
+    ports:
+      - '50052:50052'
     depends_on:
       - kafka
-      - admin-service
+      # - admin-service
     command: npm start
 
-  admin-service:
-    build:
-      context: ./kafka-admin
-      dockerfile: Dockerfile
-    container_name: admin-service
-    networks:
-      - location-system
-    depends_on:
-      - kafka
-      - zookeeper
-    command: npm start
+  # admin-service:
+  #   build:
+  #     context: ./kafka-admin
+  #     dockerfile: Dockerfile
+  #   container_name: admin-service
+  #   networks:
+  #     - location-system
+  #   depends_on:
+  #     - kafka
+  #     - zookeeper
+  #   command: npm start
 
 networks:
   location-system:

@@ -57,7 +57,7 @@ function Subscribe(call, callback){
 
 function main(){
     var server = new grpc.Server();
-    server.addService(kafka_consumer_proto.Kafka_Consumer_gRPC.service, {subscribe: Subscribe});
+    server.addService(kafka_consumer_proto.Kafka_Consumer_gRPC.service, {Subscribe: Subscribe});
     server.bindAsync(SERVER_SOCKET, grpc.ServerCredentials.createInsecure(), () => {
         server.start();
     })
