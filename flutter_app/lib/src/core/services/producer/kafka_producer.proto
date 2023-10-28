@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package kafka_consumer_grpc;
+
+//Command: protoc --dart_out=grpc:. -I. kafka_consumer.proto
+
+// service definition
+service Kafka_Producer_gRPC{
+    rpc Publish (Location_Data) returns (Response_Data) {}
+}
+
+// request message
+// message Subscribe_Data{
+//     string udid = 1; // this is a field number, starts from 1
+// }
+
+message Location_Data{
+    string udid = 1;
+    string timestamp = 2;
+    string location = 3;
+
+}
+
+message Response_Data{
+    // string udid = 1;
+    bool success = 1;
+}
