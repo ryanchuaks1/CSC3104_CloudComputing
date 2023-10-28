@@ -13,6 +13,23 @@ services:
     networks:
       - app_network
 
+  mariadb:
+    image: bitnami/mariadb-galera:latest
+    restart: always
+    profiles: ['server', 'all']
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_DATABASE=mysql_db
+      - MARIADB_USER=user
+      - MARIADB_PASSWORD=password
+    volumes:
+      - ./cloud/mysql-import/mysql-init.sql:/docker-entrypoint-startdb.d/mysql-init.sql:ro
+    deploy:
+      mode: replicated
+      replicas: 3
+    networks:
+      - app_network
+
   mongodb:
     image: docker.io/bitnami/mongodb-sharded:6.0
     container_name: mongodb
@@ -98,6 +115,22 @@ services:
     profiles: ['server', 'all']
     depends_on:
       - mongodb
+    networks:
+      - app_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    profiles: ['all']
+    environment:
+      PMA_HOST: mariadb
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    ports:
+      - 127.0.0.1:8080:8080
+    depends_on:
+      - mariadb
     networks:
       - app_network
 
