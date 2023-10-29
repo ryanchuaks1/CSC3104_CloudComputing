@@ -1,13 +1,11 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
+import 'package:grpc/grpc.dart';
 import 'package:logging/logging.dart';
 
 import '../constants/app_constants.dart';
-import '../constants/device_method_constants.dart';
 import '../models/response_model.dart';
 import '../models/device_list_model.dart';
 import '../models/device_model.dart';
+import 'package:flutter_app/src/core/services/device.pbgrpc.dart'; // Import your generated gRPC file
 
 final log = Logger('ApiLogger');
 
@@ -21,90 +19,76 @@ class ApiService {
   ApiService._init();
 
   //add new device
-  Future<Response> addNewDevice(Device device) async {
-    final url = Uri.parse(
-      AppConstants.API_URL + DeviceMethodConstants.ADD_NEW_DEVICE,
-    );
-    final request = await http.post(
-      url,
-      body: jsonEncode(device.toJson()),
-      headers: AppConstants.HEADERS,
-    );
-    Response response = Response();
+  Future<Reply> addNewDevice(Device device) async {
     try {
-      if (request.statusCode == 201) {
-        response = responseFromJson(request.body);
-      } else {
-        log.warning(request.statusCode);
-      }
+      final channel = ClientChannel(AppConstants.GRPC_URL,
+          port: AppConstants.GRPC_PORT,
+          options:
+              const ChannelOptions(credentials: ChannelCredentials.insecure()));
+
+      final client = DeviceClient(channel);
+
+      final response = await client.add_new_device(Item()
+        ..userId = device.userId
+        ..deviceId = device.deviceId
+        ..deviceName = device.deviceName
+        ..latitude = device.latitude.toString()
+        ..longitude = device.longitude.toString());
+
+      await channel.shutdown();
+
+      return Reply()..result = response.result;
     } catch (e) {
-      return Response();
+      log.warning(e.toString());
+      return Reply()..result = e.toString();
     }
-    return response;
   }
 
-  //update device
-  Future<Response> updateDevice(
-      String deviceId, String id) async {
-    final json =
-        '{"deviceId" : "$deviceId","_id" : "$id"}';
-    final url =
-        Uri.parse(AppConstants.API_URL + DeviceMethodConstants.UPDATE_DEVICE);
-    final request =
-        await http.post(url, body: json, headers: AppConstants.HEADERS);
-    Response response = Response();
+  //delete device
+  Future<Reply> deleteDevice(String id) async {
     try {
-      if (request.statusCode == 201) {
-        response = responseFromJson(request.body);
-      } else {
-        log.warning(request.statusCode);
-      }
-    } catch (e) {
-      return Response();
-    }
-    return response;
-  }
+      final channel = ClientChannel(AppConstants.GRPC_URL,
+          port: AppConstants.GRPC_PORT,
+          options:
+              const ChannelOptions(credentials: ChannelCredentials.insecure()));
 
-  //update device
-  Future<Response> deleteDevice(String id) async {
-    String json = '{"_id" : "$id"}';
-    final url =
-        Uri.parse(AppConstants.API_URL + DeviceMethodConstants.DELETE_DEVICE);
-    final request =
-        await http.post(url, body: json, headers: AppConstants.HEADERS);
-    Response response = Response();
-    try {
-      if (request.statusCode == 201) {
-        response = responseFromJson(request.body);
-      } else {
-        log.warning(request.statusCode);
-      }
+      final client = DeviceClient(channel);
+
+      final response = await client.delete_device(Item()..id = id);
+
+      await channel.shutdown();
+
+      return Reply()..result = response.result;
     } catch (e) {
-      return Response();
+      log.warning(e.toString());
+      return Reply();
     }
-    return response;
   }
 
   //get all data
   Future<List<DeviceList>> getAllDevices() async {
-    final url = Uri.parse(
-      AppConstants.API_URL + DeviceMethodConstants.LIST_ALL_DEVICES,
-    );
-    final request = await http.get(
-      url,
-      headers: AppConstants.HEADERS,
-    );
-    List<DeviceList> devicelist = [];
     try {
-      if (request.statusCode == 200) {
-        devicelist = deviceListFromJson(request.body);
-      } else {
-        log.warning(request.statusCode);
-        return const [];
-      }
+      final channel = ClientChannel(AppConstants.GRPC_URL,
+          port: AppConstants.GRPC_PORT,
+          options:
+              const ChannelOptions(credentials: ChannelCredentials.insecure()));
+
+      final client = DeviceClient(channel);
+
+      final response = await client.get_all_devices(Item());
+
+      await channel.shutdown();
+
+      return response.items
+          .map((item) => DeviceList.fromJson({
+                "_id": item.id,
+                "userId": item.userId,
+                "deviceId": item.deviceId,
+              }))
+          .toList();
     } catch (e) {
-      return const [];
+      log.warning(e.toString());
+      return [];
     }
-    return devicelist;
   }
 }
