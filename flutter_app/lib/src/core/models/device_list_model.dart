@@ -7,6 +7,7 @@ String deviceListToJson(List<DeviceList> data) => json.encode(List<dynamic>.from
 class DeviceList {
     DeviceList({
         required this.id,
+        required this.userId,
         required this.deviceId,
         required this.deviceName,
         required this.latitude,
@@ -14,6 +15,7 @@ class DeviceList {
     });
 
     String id;
+    String userId;
     String deviceId;
     String deviceName;
     double latitude;
@@ -21,6 +23,7 @@ class DeviceList {
 
     factory DeviceList.fromJson(Map<String, dynamic> json) => DeviceList(
         id: json["_id"]["\$oid"],
+        userId: json["userId"],
         deviceId: json["deviceId"],
         deviceName: json["deviceName"],
         latitude: json["latitude"],
@@ -29,6 +32,7 @@ class DeviceList {
 
     Map<String, dynamic> toJson() => {
         "_id": id,
+        "userId": userId,
         "deviceId": deviceId,
         "deviceName": deviceName,
         "latitude": latitude,
