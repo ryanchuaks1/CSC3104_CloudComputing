@@ -1,0 +1,15 @@
+{
+    "name": "kafkajs-consumer",
+    "version": "1.0",
+    "description": "KafkaJS consumer",
+    "author": "Anonymous",
+    "main": "consumer.js",
+    "scripts": {
+        "start": "node consumer-grpc-server.js"
+    },
+    "dependencies": {
+        "kafkajs": "^2.2.4",
+        "@grpc/grpc-js": "^1.9.7",
+        "@grpc/proto-loader": "^0.7.10"
+    }
+}

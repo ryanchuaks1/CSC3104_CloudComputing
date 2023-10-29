@@ -150,5 +150,88 @@ services:
     networks:
       - app_network
 
+# Kafka Services
+
+  kafka:
+    image: bitnami/kafka:3.5
+    container_name: kafka
+    ports:
+      - '9092:9092'
+    environment:
+      # Unqiue Broker ID
+      - KAFKA_BROKER_ID=1
+      - KAFKA_ENABLE_KRAFT=no
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+    depends_on:
+      - zookeeper
+    networks:
+      - location-system
+
+  zookeeper:
+    image: bitnami/zookeeper:3.9
+    container_name: zookeeper
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      - location-system
+
+  # web-server:
+  #   build:
+  #     context: ./server
+  #     dockerfile: Dockerfile
+  #   container_name: web-server
+  #   ports:
+  #     - '8080:8080'
+  #   networks:
+  #     - location-system
+  #   command: npm start
+
+  consumer-service:
+    build:
+      context: ./kafka-consumer
+      dockerfile: Dockerfile
+    container_name: consumer-service
+    networks:
+      - location-system
+    ports:
+      - '50051:50051'
+    depends_on:
+      - kafka
+      - producer-service
+    command: npm start
+  
+  producer-service:
+    build:
+      context: ./kafka-producer
+      dockerfile: Dockerfile
+    container_name: producer-service
+    networks:
+      - location-system
+    ports:
+      - '50052:50052'
+    depends_on:
+      - kafka
+      # - admin-service
+    command: npm start
+
+  # admin-service:
+  #   build:
+  #     context: ./kafka-admin
+  #     dockerfile: Dockerfile
+  #   container_name: admin-service
+  #   networks:
+  #     - location-system
+  #   depends_on:
+  #     - kafka
+  #     - zookeeper
+  #   command: npm start
+
 networks:
+  location-system:
+    driver: bridge
   app_network:

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package kafka_consumer_grpc;
+
+// service definition
+service Kafka_Consumer_gRPC{
+    rpc Subscribe (Subscribe_Data) returns (Location_Data) {}
+    // /rpc Last_Location (Location_Data) returns (Response_Data) {}
+}
+
+// request message
+message Subscribe_Data{
+    string udid = 1; // this is a field number, starts from 1
+}
+
+message Location_Data{
+    string udid = 1;
+    string timestamp = 2;
+    string location = 3;
+
+}
+
+// message Response_Data{
+//     string udid = 1;
+//     bool success = 1;
+// }
