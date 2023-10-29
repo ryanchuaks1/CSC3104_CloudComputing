@@ -3,8 +3,6 @@ import 'package:flutter_app/components/already_have_an_account_check.dart';
 import 'package:flutter_app/components/rounded_button.dart';
 import 'package:flutter_app/components/rounded_input_field.dart';
 import 'package:flutter_app/components/rounded_password_field.dart';
-import 'package:flutter_app/components/text_field_container.dart';
-import 'package:flutter_app/constants.dart';
 import 'package:flutter_app/src/ui/views/Login/components/background.dart';
 import 'package:flutter_app/src/ui/views/Signup/signup_page.dart';
 import 'package:flutter_app/src/ui/views/home_page.dart';
@@ -23,7 +21,7 @@ class Body extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
-          Text("LOGIN", style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text("LOGIN", style: TextStyle(fontWeight: FontWeight.bold)),
           SizedBox(height: size.height * 0.03),
           SvgPicture.asset(
             "assets/icons/login.svg",
