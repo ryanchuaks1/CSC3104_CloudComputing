@@ -1,4 +1,4 @@
 class AppConstants {
-  static const String GRPC_URL = "http://192.168.32.138:5000";
-  static const int GRPC_PORT = 5000;
+  static const String GRPC_URL = "10.0.2.2";
+  static const int GRPC_PORT = 5001;
 }

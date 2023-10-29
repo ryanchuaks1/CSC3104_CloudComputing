@@ -9,8 +9,8 @@ RUN chmod +x /wait-for-it.sh
 WORKDIR /server
 
 COPY . .
-RUN pip install grpcio_tools-1.59.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 RUN pip install -r requirements.txt
+RUN pip install mysql-connector
 RUN make
 
-ENTRYPOINT ["/wait-for-it.sh", "mongodb:27017", "-t", "100", "--", "python", "server.py"]
+ENTRYPOINT ["/wait-for-it.sh", "mariadb:3306", "-t", "100", "--", "python", "server.py"]

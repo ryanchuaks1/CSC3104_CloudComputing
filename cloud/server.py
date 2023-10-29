@@ -72,7 +72,7 @@ class Device(DeviceServicer):
 def main() -> None:
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     add_DeviceServicer_to_server(Device(), server)
-    server.add_insecure_port('[::]:5000')
+    server.add_insecure_port('[::]:5001')
     server.start()
     server.wait_for_termination()
 

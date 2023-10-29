@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
-import 'package:flutter_app/src/core/constants/message_constants.dart';
+import 'package:flutter_app/src/core/constants/app_constants.dart';
 import 'package:flutter_app/src/ui/common/show_toast_message.dart';
 
 import '../../core/models/device_list_model.dart';
@@ -138,37 +138,35 @@ class _HomePageState extends State<HomePage> {
               if (data.result == true) {
                 setState(() {
                   _deviceIdController.clear();
-                  ShowToastMessage.showCenterShortToast(
-                      MessageConstants.BASARILI);
+                  ShowToastMessage.showCenterShortToast("SUCCESS");
                 });
               } else {
-                ShowToastMessage.showCenterShortToast(MessageConstants.HATA);
+                ShowToastMessage.showCenterShortToast("ERROR");
               }
             });
           },
         ),
       );
 
-  Widget get updateDeviceButton => DefaultRaisedButton(
-        height: 55,
-        label: 'Update',
-        color: Colors.cyanAccent,
-        onPressed: () async {
-          await ApiService()
-              .updateDevice(_deviceIdController.text, _id)
-              .then((data) {
-            if (data.result == true) {
-              setState(() {
-                _deviceIdController.clear();
-                ShowToastMessage.showCenterShortToast(
-                    MessageConstants.BASARILI);
-              });
-            } else {
-              ShowToastMessage.showCenterShortToast(MessageConstants.HATA);
-            }
-          });
-        },
-      );
+  // Widget get updateDeviceButton => DefaultRaisedButton(
+  //       height: 55,
+  //       label: 'Update',
+  //       color: Colors.cyanAccent,
+  //       onPressed: () async {
+  //         await ApiService()
+  //             .updateDevice(_deviceIdController.text, _id)
+  //             .then((data) {
+  //           if (data.result == true) {
+  //             setState(() {
+  //               _deviceIdController.clear();
+  //               ShowToastMessage.showCenterShortToast("SUCCESS");
+  //             });
+  //           } else {
+  //             ShowToastMessage.showCenterShortToast("ERROR");
+  //           }
+  //         });
+  //       },
+  //     );
 }
 
 class DevicePanel extends StatelessWidget {
@@ -188,7 +186,7 @@ class ErrorOccurred extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: const Text(MessageConstants.ERROR_OCCURED),
+      child: const Text("Try to load data again"),
     );
   }
 }
@@ -207,7 +205,7 @@ class NoSavedData extends StatelessWidget {
         ),
         SizedBox(height: 10),
         Text(
-          MessageConstants.NO_SAVED_DATA,
+          "NO SAVED DATA",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 24,
@@ -251,19 +249,20 @@ Future<void> _showAddDeviceDialog(
             onPressed: () async {
               await ApiService()
                   .addNewDevice(Device(
+                      userId: "testing",
                       deviceId: uuid.v4(),
                       deviceName: _deviceNameController.text,
                       latitude: 0,
                       longitude: 0))
                   .then((data) {
-                if (data.result == true) {
+                if (data.result == "True") {
                   _deviceNameController.clear();
-                  ShowToastMessage.showCenterShortToast(
-                      MessageConstants.BASARILI);
+                  ShowToastMessage.showCenterShortToast("SUCCESS");
                   Navigator.of(context).pop(); // DRY?
                   onDialogDismissed(); // DRY?
                 } else {
-                  ShowToastMessage.showCenterShortToast(MessageConstants.HATA);
+                  print(data.result);
+                  ShowToastMessage.showCenterShortToast(data.result);
                   Navigator.of(context).pop(); // DRY?
                   onDialogDismissed(); // DRY?
                 }
