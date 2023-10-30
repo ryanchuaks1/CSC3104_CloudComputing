@@ -5,7 +5,8 @@ Progress Report:
 
 TODO:
 
-- After Reply, Client initialise a port to listen for any message published onto the topic from the Kafka Consumer
+- Integration to api_service.dart
+- Link to SQL server to subscribe to all the devices by the user
 
 RUN: 
 
@@ -13,6 +14,15 @@ RUN:
     - docker-compose up -d
     - wait for all containers to be initialised
 
-- Run Kafka Client (To be integrated with application):
+- Run Kafka Producer (Create topic and Publish)
+    - goto this Directory
+    - Run "dart kafka_producer_handler.dart"
+
+- Run Kafka Consumer (Listening To Topic):
     - goto this Directory
     - Run "dart kafka_consumer_handler.dart"
+
+- Expected Output:
+    - Every Publish in the Producer will return true
+    - Every Consumer will prin the "udid, timestamp, location"
+

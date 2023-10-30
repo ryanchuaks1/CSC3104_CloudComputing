@@ -70,13 +70,13 @@ class KafkaConsumerHandler
     final stream = await _stub.subscribe(params);
 
     //Print the Reply
-    print('Greeter client received: ${stream.udid}, ${stream.timestamp}, ${stream.location}');
+    // print('Greeter client received: ${stream.udid}, ${stream.timestamp}, ${stream.location}');
 
-    // await for (var message1 in stream) {
-    //   // Process the received message as needed
-    //   print('Received message: ${message1.udid} , ${message1.timestamp}, ${message1.location}');
-    //   // You can assign the message to a variable or use it for other services here.
-    // }
+    await for (var message1 in stream) {
+      // Process the received message as needed
+      print('Received message: ${message1.udid} , ${message1.timestamp}, ${message1.location}');
+      // You can assign the message to a variable or use it for other services here.
+    }
   }
 
   //This function is to close the channel
