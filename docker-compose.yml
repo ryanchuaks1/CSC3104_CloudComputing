@@ -12,19 +12,17 @@ services:
       - app_network
 
   mariadb:
-    image: bitnami/mariadb-galera:latest
+    image: mariadb
+    container_name: mariadb
     restart: always
     profiles: ['server', 'all']
     environment:
-      - ALLOW_EMPTY_PASSWORD=yes
       - MARIADB_DATABASE=mysql_db
+      - MARIADB_ROOT_PASSWORD=password
       - MARIADB_USER=user
       - MARIADB_PASSWORD=password
     volumes:
       - ./cloud/mysql-import/mysql-init.sql:/docker-entrypoint-startdb.d/mysql-init.sql:ro
-    deploy:
-      mode: replicated
-      replicas: 3
     networks:
       - app_network
 
