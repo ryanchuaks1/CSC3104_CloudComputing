@@ -33,23 +33,43 @@ class DeviceClient extends $grpc.Client {
       '/device.Device/get_all_devices',
       ($0.Item value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.Reply.fromBuffer(value));
+  static final _$create_account = $grpc.ClientMethod<$0.UserAccount, $0.Reply>(
+      '/device.Device/create_account',
+      ($0.UserAccount value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.Reply.fromBuffer(value));
+  static final _$login = $grpc.ClientMethod<$0.UserAccount, $0.UserInstance>(
+      '/device.Device/login',
+      ($0.UserAccount value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.UserInstance.fromBuffer(value));
 
   DeviceClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
       $core.Iterable<$grpc.ClientInterceptor>? interceptors})
-      : super(channel, options: options,
-        interceptors: interceptors);
+      : super(channel, options: options, interceptors: interceptors);
 
-  $grpc.ResponseFuture<$0.Reply> add_new_device($0.Item request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.Reply> add_new_device($0.Item request,
+      {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$add_new_device, request, options: options);
   }
 
-  $grpc.ResponseFuture<$0.Reply> delete_device($0.Item request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.Reply> delete_device($0.Item request,
+      {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$delete_device, request, options: options);
   }
 
-  $grpc.ResponseFuture<$0.Reply> get_all_devices($0.Item request, {$grpc.CallOptions? options}) {
+  $grpc.ResponseFuture<$0.Reply> get_all_devices($0.Item request,
+      {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$get_all_devices, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.Reply> create_account($0.UserAccount request,
+      {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$create_account, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.UserInstance> login($0.UserAccount request,
+      {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$login, request, options: options);
   }
 }
 
@@ -79,21 +99,55 @@ abstract class DeviceServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.Item.fromBuffer(value),
         ($0.Reply value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.UserAccount, $0.Reply>(
+        'create_account',
+        create_account_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.UserAccount.fromBuffer(value),
+        ($0.Reply value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.UserAccount, $0.UserInstance>(
+        'login',
+        login_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.UserAccount.fromBuffer(value),
+        ($0.UserInstance value) => value.writeToBuffer()));
   }
 
-  $async.Future<$0.Reply> add_new_device_Pre($grpc.ServiceCall call, $async.Future<$0.Item> request) async {
+  $async.Future<$0.Reply> add_new_device_Pre(
+      $grpc.ServiceCall call, $async.Future<$0.Item> request) async {
     return add_new_device(call, await request);
   }
 
-  $async.Future<$0.Reply> delete_device_Pre($grpc.ServiceCall call, $async.Future<$0.Item> request) async {
+  $async.Future<$0.Reply> delete_device_Pre(
+      $grpc.ServiceCall call, $async.Future<$0.Item> request) async {
     return delete_device(call, await request);
   }
 
-  $async.Future<$0.Reply> get_all_devices_Pre($grpc.ServiceCall call, $async.Future<$0.Item> request) async {
+  $async.Future<$0.Reply> get_all_devices_Pre(
+      $grpc.ServiceCall call, $async.Future<$0.Item> request) async {
     return get_all_devices(call, await request);
   }
 
-  $async.Future<$0.Reply> add_new_device($grpc.ServiceCall call, $0.Item request);
-  $async.Future<$0.Reply> delete_device($grpc.ServiceCall call, $0.Item request);
-  $async.Future<$0.Reply> get_all_devices($grpc.ServiceCall call, $0.Item request);
+  $async.Future<$0.Reply> create_account_Pre(
+      $grpc.ServiceCall call, $async.Future<$0.UserAccount> request) async {
+    return create_account(call, await request);
+  }
+
+  $async.Future<$0.UserInstance> login_Pre(
+      $grpc.ServiceCall call, $async.Future<$0.UserAccount> request) async {
+    return login(call, await request);
+  }
+
+  $async.Future<$0.Reply> add_new_device(
+      $grpc.ServiceCall call, $0.Item request);
+  $async.Future<$0.Reply> delete_device(
+      $grpc.ServiceCall call, $0.Item request);
+  $async.Future<$0.Reply> get_all_devices(
+      $grpc.ServiceCall call, $0.Item request);
+  $async.Future<$0.Reply> create_account(
+      $grpc.ServiceCall call, $0.UserAccount request);
+  $async.Future<$0.UserInstance> login(
+      $grpc.ServiceCall call, $0.UserAccount request);
 }

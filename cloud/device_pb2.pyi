@@ -21,6 +21,24 @@ class Item(_message.Message):
     longitude: str
     def __init__(self, _id: _Optional[str] = ..., userId: _Optional[str] = ..., deviceId: _Optional[str] = ..., deviceName: _Optional[str] = ..., latitude: _Optional[str] = ..., longitude: _Optional[str] = ...) -> None: ...
 
+class UserAccount(_message.Message):
+    __slots__ = ["userName", "userPasswordHash"]
+    USERNAME_FIELD_NUMBER: _ClassVar[int]
+    USERPASSWORDHASH_FIELD_NUMBER: _ClassVar[int]
+    userName: str
+    userPasswordHash: str
+    def __init__(self, userName: _Optional[str] = ..., userPasswordHash: _Optional[str] = ...) -> None: ...
+
+class UserInstance(_message.Message):
+    __slots__ = ["result", "userId", "userName"]
+    RESULT_FIELD_NUMBER: _ClassVar[int]
+    USERID_FIELD_NUMBER: _ClassVar[int]
+    USERNAME_FIELD_NUMBER: _ClassVar[int]
+    result: str
+    userId: str
+    userName: str
+    def __init__(self, result: _Optional[str] = ..., userId: _Optional[str] = ..., userName: _Optional[str] = ...) -> None: ...
+
 class Reply(_message.Message):
     __slots__ = ["result", "message", "items"]
     RESULT_FIELD_NUMBER: _ClassVar[int]

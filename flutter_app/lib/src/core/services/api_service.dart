@@ -5,6 +5,7 @@ import '../constants/app_constants.dart';
 import '../models/response_model.dart';
 import '../models/device_list_model.dart';
 import '../models/device_model.dart';
+import '../models/user_model.dart';
 import 'package:flutter_app/src/core/services/device.pbgrpc.dart'; // Import your generated gRPC file
 
 final log = Logger('ApiLogger');
@@ -89,6 +90,57 @@ class ApiService {
     } catch (e) {
       log.warning(e.toString());
       return [];
+    }
+  }
+
+  Future<Reply> createAccount(User_Account user) async {
+    try {
+      final channel = ClientChannel(AppConstants.GRPC_URL,
+          port: AppConstants.GRPC_PORT,
+          options:
+              const ChannelOptions(credentials: ChannelCredentials.insecure()));
+
+      final client = DeviceClient(channel);
+
+      print(user.userName);
+      print(user.userPasswordHash);
+      final response = await client.create_account(UserAccount()
+        ..userName = user.userName
+        ..userPasswordHash = user.userPasswordHash);
+
+      await channel.shutdown();
+
+      return Reply()..result = response.result;
+    } catch (e) {
+      log.warning(e.toString());
+      return Reply()..result = e.toString();
+    }
+  }
+
+  Future<UserInstance> login(User_Account user) async {
+    try {
+      final channel = ClientChannel(AppConstants.GRPC_URL,
+          port: AppConstants.GRPC_PORT,
+          options:
+              const ChannelOptions(credentials: ChannelCredentials.insecure()));
+      final client = DeviceClient(channel);
+
+      final response = await client.login(UserAccount()
+        ..userName = user.userName
+        ..userPasswordHash = user.userPasswordHash);
+
+      await channel.shutdown();
+
+      print(response);
+      print(user.userName);
+
+      return UserInstance()
+        ..result = response.result
+        ..userId = response.userId
+        ..userName = response.userName;
+    } catch (e) {
+      log.warning(e.toString());
+      return UserInstance()..result = e.toString();
     }
   }
 }

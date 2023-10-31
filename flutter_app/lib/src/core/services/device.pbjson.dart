@@ -32,6 +32,35 @@ final $typed_data.Uint8List itemDescriptor = $convert.base64Decode(
     'NlSWQYAyABKAlSCGRldmljZUlkEh4KCmRldmljZU5hbWUYBCABKAlSCmRldmljZU5hbWUSGgoI'
     'bGF0aXR1ZGUYBSABKAlSCGxhdGl0dWRlEhwKCWxvbmdpdHVkZRgGIAEoCVIJbG9uZ2l0dWRl');
 
+@$core.Deprecated('Use userAccountDescriptor instead')
+const UserAccount$json = {
+  '1': 'UserAccount',
+  '2': [
+    {'1': 'userName', '3': 1, '4': 1, '5': 9, '10': 'userName'},
+    {'1': 'userPasswordHash', '3': 2, '4': 1, '5': 9, '10': 'userPasswordHash'},
+  ],
+};
+
+/// Descriptor for `UserAccount`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List userAccountDescriptor = $convert.base64Decode(
+    'CgtVc2VyQWNjb3VudBIaCgh1c2VyTmFtZRgBIAEoCVIIdXNlck5hbWUSKgoQdXNlclBhc3N3b3'
+    'JkSGFzaBgCIAEoCVIQdXNlclBhc3N3b3JkSGFzaA==');
+
+@$core.Deprecated('Use userInstanceDescriptor instead')
+const UserInstance$json = {
+  '1': 'UserInstance',
+  '2': [
+    {'1': 'result', '3': 1, '4': 1, '5': 9, '10': 'result'},
+    {'1': 'userId', '3': 2, '4': 1, '5': 9, '10': 'userId'},
+    {'1': 'userName', '3': 3, '4': 1, '5': 9, '10': 'userName'},
+  ],
+};
+
+/// Descriptor for `UserInstance`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List userInstanceDescriptor = $convert.base64Decode(
+    'CgxVc2VySW5zdGFuY2USFgoGcmVzdWx0GAEgASgJUgZyZXN1bHQSFgoGdXNlcklkGAIgASgJUg'
+    'Z1c2VySWQSGgoIdXNlck5hbWUYAyABKAlSCHVzZXJOYW1l');
+
 @$core.Deprecated('Use replyDescriptor instead')
 const Reply$json = {
   '1': 'Reply',

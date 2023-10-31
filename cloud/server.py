@@ -1,7 +1,8 @@
 import grpc
+import uuid
 from concurrent import futures
 import mysql.connector
-from device_pb2 import Item, Reply
+from device_pb2 import Item, Reply, UserInstance
 from device_pb2_grpc import DeviceServicer, add_DeviceServicer_to_server
 
 class Device(DeviceServicer):
@@ -68,6 +69,42 @@ class Device(DeviceServicer):
 
         items = [Item(deviceId=row[0], userId=row[1]) for row in result]
         return Reply(result="True", message="Devices retrieved successfully", items=items)
+
+    def create_account(self, request, context):
+        unique_user_id = uuid.uuid4()
+        unique_user_id = unique_user_id.hex
+        print(request.userName)
+        insert_query = "INSERT INTO users (user_id, user_name, user_password_hash) VALUES (%s, %s, %s)"
+        insert_values = (unique_user_id, request.userName, request.userPasswordHash)
+        
+        try:
+            self.cursor.execute(insert_query, insert_values)
+            self.connection.commit()
+            return Reply(result="True", message="User account created successfully!")
+        except Exception as e:
+            return Reply(result="False", message=f"Error: {str(e)}")
+    
+    def login(self, request, context):
+        print(request.userName)
+        select_query = "SELECT * FROM users WHERE user_name = %s"
+        select_values = (request.userName,)
+        self.cursor.execute(select_query, select_values)
+        result = self.cursor.fetchall()
+
+        print(result)
+
+        result = result[0] if len(result) else None
+
+        if result == None:
+            return UserInstance(result="False")
+        
+        ## Validate user here
+        if (result[2] == request.userPasswordHash):
+            return UserInstance(result="True", userId=result[0], userName=result[1])
+        
+        return UserInstance(result="False, Invalid Username or Password")
+
+
 
 def main() -> None:
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
