@@ -22,7 +22,7 @@ services:
       - MARIADB_USER=user
       - MARIADB_PASSWORD=password
     volumes:
-      - ./cloud/mysql-import/mysql-init.sql:/docker-entrypoint-startdb.d/mysql-init.sql:ro
+      - ./cloud/mysql-import/mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - app_network
 
