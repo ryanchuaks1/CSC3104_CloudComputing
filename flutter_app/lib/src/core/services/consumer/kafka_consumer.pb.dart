@@ -142,6 +142,70 @@ class Location_Data extends $pb.GeneratedMessage {
   void clearLocation() => clearField(3);
 }
 
+class Response_Data extends $pb.GeneratedMessage {
+  factory Response_Data({
+    $core.String? udid,
+    $core.bool? success,
+  }) {
+    final $result = create();
+    if (udid != null) {
+      $result.udid = udid;
+    }
+    if (success != null) {
+      $result.success = success;
+    }
+    return $result;
+  }
+  Response_Data._() : super();
+  factory Response_Data.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response_Data.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response_Data', package: const $pb.PackageName(_omitMessageNames ? '' : 'kafka_consumer_grpc'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'udid')
+    ..aOB(2, _omitFieldNames ? '' : 'success')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Response_Data clone() => Response_Data()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response_Data copyWith(void Function(Response_Data) updates) => super.copyWith((message) => updates(message as Response_Data)) as Response_Data;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response_Data create() => Response_Data._();
+  Response_Data createEmptyInstance() => create();
+  static $pb.PbList<Response_Data> createRepeated() => $pb.PbList<Response_Data>();
+  @$core.pragma('dart2js:noInline')
+  static Response_Data getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_Data>(create);
+  static Response_Data? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get udid => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set udid($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasUdid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearUdid() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.bool get success => $_getBF(1);
+  @$pb.TagNumber(2)
+  set success($core.bool v) { $_setBool(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasSuccess() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearSuccess() => clearField(2);
+}
+
 
 const _omitFieldNames = $core.bool.fromEnvironment('protobuf.omit_field_names');
 const _omitMessageNames = $core.bool.fromEnvironment('protobuf.omit_message_names');

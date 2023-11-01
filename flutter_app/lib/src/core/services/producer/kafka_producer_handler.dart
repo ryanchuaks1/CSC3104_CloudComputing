@@ -22,7 +22,7 @@ void main() async {
 
   try {
     KafkaProducerHandler handler = KafkaProducerHandler("f1740855-6716-11ee-9b42-107b44");
-    if (handler.startProducerService('127.0.0.1', 50054)) {
+    if (handler.startProducerService('127.0.0.1', 50052)) {
 
       //Create a device topic before publishing onto it
       await handler.createDeviceTopic();

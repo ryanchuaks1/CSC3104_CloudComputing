@@ -40,3 +40,17 @@ final $typed_data.Uint8List location_DataDescriptor = $convert.base64Decode(
     'Cg1Mb2NhdGlvbl9EYXRhEhIKBHVkaWQYASABKAlSBHVkaWQSHAoJdGltZXN0YW1wGAIgASgJUg'
     'l0aW1lc3RhbXASGgoIbG9jYXRpb24YAyABKAlSCGxvY2F0aW9u');
 
+@$core.Deprecated('Use response_DataDescriptor instead')
+const Response_Data$json = {
+  '1': 'Response_Data',
+  '2': [
+    {'1': 'udid', '3': 1, '4': 1, '5': 9, '10': 'udid'},
+    {'1': 'success', '3': 2, '4': 1, '5': 8, '10': 'success'},
+  ],
+};
+
+/// Descriptor for `Response_Data`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List response_DataDescriptor = $convert.base64Decode(
+    'Cg1SZXNwb25zZV9EYXRhEhIKBHVkaWQYASABKAlSBHVkaWQSGAoHc3VjY2VzcxgCIAEoCFIHc3'
+    'VjY2Vzcw==');
+
