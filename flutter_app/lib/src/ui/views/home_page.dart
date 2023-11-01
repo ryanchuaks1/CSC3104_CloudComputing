@@ -11,8 +11,9 @@ import '../widgets/default_custom_button.dart';
 import '../widgets/google_map_widget.dart';
 
 class HomePage extends StatefulWidget {
-  final String userId;
   const HomePage({Key? key, required this.userId}) : super(key: key);
+
+  final String userId;
 
   @override
   _HomePageState createState() => _HomePageState();
