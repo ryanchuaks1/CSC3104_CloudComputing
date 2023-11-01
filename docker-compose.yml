@@ -1,11 +1,10 @@
 version: '3.8'
 
 services:
-  server:
-    build: cloud
-    container_name: server
+  cloud-server:
+    image: ghcr.io/mcdulltii/cloud-server:latest
+    container_name: cloud-server
     restart: always
-    profiles: ['server', 'all']
     ports:
       - 5001:5001
     networks:
@@ -15,7 +14,8 @@ services:
     image: mariadb
     container_name: mariadb
     restart: always
-    profiles: ['server', 'all']
+    ports:
+      - '3306:3306'
     environment:
       - MARIADB_DATABASE=mysql_db
       - MARIADB_ROOT_PASSWORD=password
@@ -23,22 +23,6 @@ services:
       - MARIADB_PASSWORD=password
     volumes:
       - ./cloud/mysql-import/mysql-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    networks:
-      - app_network
-
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    restart: always
-    profiles: ['all']
-    environment:
-      PMA_HOST: mariadb
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-    ports:
-      - 127.0.0.1:8080:8080
-    depends_on:
-      - mariadb
     networks:
       - app_network
 
@@ -82,9 +66,7 @@ services:
   #   command: npm start
 
   consumer-service:
-    build:
-      context: ./kafka-consumer
-      dockerfile: Dockerfile
+    image: ghcr.io/mcdulltii/consumer-service:latest
     container_name: consumer-service
     networks:
       - location-system
@@ -94,11 +76,9 @@ services:
       - kafka
       - producer-service
     command: npm start
-  
+
   producer-service:
-    build:
-      context: ./kafka-producer
-      dockerfile: Dockerfile
+    image: ghcr.io/mcdulltii/producer-service:latest
     container_name: producer-service
     networks:
       - location-system

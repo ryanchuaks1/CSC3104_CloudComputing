@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.31.2 (a92241f79)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: mariadb
+    apps: mariadb
+  name: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: mariadb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.31.2 (a92241f79)
+      creationTimestamp: null
+      labels:
+        io.kompose.network/csc3104-cloudcomputing-app-network: "true"
+        io.kompose.service: mariadb
+        apps: mariadb
+    spec:
+      containers:
+        - env:
+            - name: MARIADB_DATABASE
+              value: mysql_db
+            - name: MARIADB_PASSWORD
+              value: password
+            - name: MARIADB_ROOT_PASSWORD
+              value: password
+            - name: MARIADB_USER
+              value: user
+          image: mariadb
+          name: mariadb
+          ports:
+            - containerPort: 3306
+              hostPort: 3306
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /docker-entrypoint-initdb.d
+              name: mariadb-claim0
+              readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: mariadb-claim0
+          persistentVolumeClaim:
+            claimName: mariadb-claim0
+            readOnly: true
+status: {}
