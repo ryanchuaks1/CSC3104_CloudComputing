@@ -60,3 +60,5 @@ ct = ubinascii.hexlify(ct_bytes).decode('utf-8')
 print(ct)
 while True:
     advertise_bluetooth_message(sp, ct)
+    
+    time.sleep(0.2)
