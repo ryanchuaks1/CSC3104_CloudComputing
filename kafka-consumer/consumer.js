@@ -1,7 +1,5 @@
 class Kafka_Consumer{
-    constructor(udid, client_id, group_id, grpc_call){
-        this._grpc_call = grpc_call;
-        this._udid = udid;
+    constructor(client_id, group_id){
         const { Kafka } = require('kafkajs');
         this._kafka_conn = new Kafka({
             clientId: client_id,
@@ -12,11 +10,55 @@ class Kafka_Consumer{
         })
     }
 
-    async subscribe_and_listen(){
+    async export_log(volume_path){
+        const kafka_admin = require("./admin.js")
+        const fs = require('fs');
+        var admin_client = new kafka_admin.Kafka_Admin('kafka-admin-2');
+        try {
+            await this._consumer.connect();
+            const topics = await admin_client.list_topics();
+
+            console.log("1st topic = " + topics[0]);
+
+            for (const topic of topics) {
+                const file_path = `${volume_path}/${topic}.txt`;
+                console.log(file_path);
+
+                await this._consumer.subscribe({
+                    topic: topic,
+                    fromBeginning: false
+                });
+
+                const write_stream = fs.createWriteStream(file_path, { flags: 'a' });
+
+                await this._consumer.run({
+                    eachMessage: async({ topic, partition, message }) => {
+                        console.log({
+                            key: message.key.toString(),
+                            value: message.value.toString(),
+                        });
+
+                        write_stream.write(file_path, "Timestamp: " + message.key.toString() + ", Location: " + message.value.toString() + "\n");
+                        return;
+                    }
+                });
+
+                write_stream.end();
+            };
+
+        } catch (error) {
+            console.error("Error: " + error.message);
+        }
+        finally{
+            await this._consumer.disconnect();
+        }
+    }
+
+    async subscribe_and_listen(udid){
         try{
             await this._consumer.connect();
             await this._consumer.subscribe({
-                topic: this._udid,
+                topic: udid,
                 fromBeginning: false
             });
     
@@ -40,13 +82,13 @@ class Kafka_Consumer{
 
     }
 
-    return_location(topic, partition, message){
-        this._grpc_call.write({udid: this._grpc_call.request.udid, timestamp: message.key.toString(), location: message.value.toString()});
-        console.log({
-            key: message.key.toString(),
-            value: message.value.toString(),
-        });
-    }
+    // return_location(topic, partition, message){
+    //     this._grpc_call.write({udid: this._grpc_call.request.udid, timestamp: message.key.toString(), location: message.value.toString()});
+    //     console.log({
+    //         key: message.key.toString(),
+    //         value: message.value.toString(),
+    //     });
+    // }
 }
 
 // const kafka_consumer = new Kafka_Consumer("f1740855-6716-11ee-9b42-107b44", 'kafka-client', 'user_1');

@@ -9,10 +9,15 @@ class Kafka_Producer{
         this._producer = this._kafka_conn.producer();
     }
 
+    async load_topics(file_path){
+        
+    }
+
     async update_location(location){
+        var res = false;
         try{
             await this._producer.connect();
-            await this._producer.send({
+            res = await this._producer.send({
                 topic: this._udid,
                 messages: [
                     {
@@ -21,13 +26,15 @@ class Kafka_Producer{
                     }
                 ]
             });
+            console.log("Result of update_location: " + res);
         }
         catch(error){
-            console.error("Error: " + error.message);
+            console.error("Error from update_location: " + error.message);
         }
         finally{
             await this._producer.disconnect();
         }
+        return res;
     }
 }
 

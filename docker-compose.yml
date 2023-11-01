@@ -167,6 +167,8 @@ services:
       - location-system
     ports:
       - '50051:50051'
+    volumes:
+      - kafka-data:/usr/src/app/data/:rw
     depends_on:
       - kafka
       - producer-service
@@ -181,6 +183,8 @@ services:
       - location-system
     ports:
       - '50052:50052'
+    volumes:
+      - kafka-data:/usr/src/app/data/:ro
     depends_on:
       - kafka
       # - admin-service
@@ -202,3 +206,6 @@ networks:
   location-system:
     driver: bridge
   app_network:
+
+volumes:
+  kafka-data:

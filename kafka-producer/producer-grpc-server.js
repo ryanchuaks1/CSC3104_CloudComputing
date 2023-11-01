@@ -20,31 +20,21 @@ var packageDefinition = protoLoader.loadSync(
 var kafka_producer_proto = grpc.loadPackageDefinition(packageDefinition).kafka_producer_grpc;
 
 async function Add_New_Location(call, callback){
-    try {
-        const new_producer = new kafka_producer.Kafka_Producer(call.request.udid, 'kafka-producer');
-        await new_producer.update_location(call.request.location);
-        callback(null, {udid: call.request.udid, success: true});
-    } catch (error) {
-        console.error("Error: " + error.message);
-        callback(null, {udid: call.request.udid, success: false});
-    }
+    const new_producer = new kafka_producer.Kafka_Producer(call.request.udid, 'kafka-producer');
+    var res = await new_producer.update_location(call.request.location);
+    callback(null, {udid: call.request.udid, success: res});
 }
 
 async function Add_New_Topic(call, callback){
-    try {
-        const new_admin = new kafka_admin.Kafka_Admin('kafka-admin');
+    const new_admin = new kafka_admin.Kafka_Admin('kafka-admin');
         
-        var topic_exist = await new_admin.check_topic(call.request.udid);
+    var topic_exist = await new_admin.check_topic(call.request.udid);
 
-        if(topic_exist){
-            callback(null, {udid: call.request.udid, success: false});
-        }
-        else{
-            await new_admin.add_new_topic(call.request.udid);
-            callback(null, {udid: call.request.udid, success: true});
-        }
-    } catch (error) {
-        console.error("Error: " + error.message);
+    if(!topic_exist){
+        await new_admin.add_new_topic(call.request.udid);
+        callback(null, {udid: call.request.udid, success: true});
+    }
+    else{
         callback(null, {udid: call.request.udid, success: false});
     }
 }

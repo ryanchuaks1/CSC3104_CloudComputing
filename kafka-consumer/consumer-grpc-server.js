@@ -1,5 +1,6 @@
 const PROTO_PATH = __dirname + '/kafka_consumer.proto';
 const SERVER_SOCKET = "consumer-service:50051";
+const VOLUME_PATH = __dirname + '/data';
 
 //var parseArgs = require('minimist');
 var grpc = require('@grpc/grpc-js');
@@ -21,14 +22,15 @@ var kafka_consumer_proto = grpc.loadPackageDefinition(packageDefinition).kafka_c
 function Subscribe(call, callback){
     // const new_consumer = new kafka_consumer.Kafka_Consumer(call.request.udid, 'kafka-client', 'user_1', call);
     // new_consumer.subscribe_and_listen().catch(console.error);
+    var count = 0;
 
     const { Kafka } = require('kafkajs');
     const kafka = new Kafka({
-        clientId: 'my-app',
+        clientId: 'kafka-client',
         brokers: ['kafka:9092'],
     });
     const consumer = kafka.consumer({
-        groupId: 'my-group'
+        groupId: 'user_1'
     });
 
     async function run(){
@@ -42,11 +44,24 @@ function Subscribe(call, callback){
             await consumer.run({
                 eachMessage: async ({ topic, partition, message }) => {
                     call.write({udid: call.request.udid, timestamp: message.key.toString(), location: message.value.toString()});
+                    console.log({
+                        key: message.key.toString(),
+                        value: message.value.toString(),
+                    });
+                    // count++;
+                    // if(count === 5){
+                    //     await consumer.disconnect();
+                    //     call.end();
+                    //     return;
+                    // }
                 },
             });
+
+            // var new_consumer = new kafka_consumer.Kafka_Consumer('kafka-client-2', 'user_1');
+            // await new_consumer.export_log(VOLUME_PATH);
         }
         catch(error){
-            console.error("Error: " + error.message);
+            console.error("Error from run(): " + error.message);
             await consumer.disconnect();
         }
     }
