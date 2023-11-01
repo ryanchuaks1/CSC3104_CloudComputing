@@ -1,108 +1,117 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS, cross_origin
-from pymongo import MongoClient
-from bson import json_util
-from bson.objectid import ObjectId
-import json
+import grpc
+import uuid
+from concurrent import futures
+import mysql.connector
+from device_pb2 import Item, Reply, UserInstance
+from device_pb2_grpc import DeviceServicer, add_DeviceServicer_to_server
 
-# Define the MongoDB connection string
-MONGO_URI = "mongodb://root:password@mongodb:27017/mongo_db?authSource=admin&readPreference=primary&appname=MongoDB%20Compass&retryWrites=true&ssl=false"
+class Device(DeviceServicer):
+    def __init__(self) -> None:
+        # Define the MySQL connection parameters
+        self.MYSQL_HOST = "mariadb"
+        self.MYSQL_USER = "user"
+        self.MYSQL_PASSWORD = "password"
+        self.MYSQL_DATABASE = "mysql_db"
 
-# Create the Flask app
-app = Flask(__name__)
-cors = CORS(app)
-app.config["CORS_HEADERS"] = "Content-Type"
-db = None
+        # Connect to the MySQL database
+        try:
+            self.connection = mysql.connector.connect(
+                host=self.MYSQL_HOST,
+                user=self.MYSQL_USER,
+                password=self.MYSQL_PASSWORD,
+                database=self.MYSQL_DATABASE
+            )
+            self.cursor = self.connection.cursor()
+            print("Connected to MySQL successfully!")
+        except Exception as e:
+            print("An error occurred:", e)
 
+    def add_new_device(self, request, context):
+        query = "SELECT * FROM users WHERE user_id = %s"
+        values = (request.userId,)
+        self.cursor.execute(query, values)
+        result = self.cursor.fetchall()
 
-def connect_db() -> MongoClient:
-    global MONGO_URI
-    try:
-        # Connect to MongoDB
-        client = MongoClient(MONGO_URI)
-        print("Connected to MongoDB successfully!")
-    except errors.ConnectionFailure as e:
-        print("Could not connect to MongoDB:", e)
-    except Exception as e:
-        print("An error occurred:", e)
+        if not result:
+            # Insert the new user into the users table
+            insert_query = "INSERT INTO users (user_id, user_name, user_password_hash) VALUES (%s, %s, %s)"
+            insert_values = (request.userId, "user_name_example", "user_password_hash_example")
+            self.cursor.execute(insert_query, insert_values)
+            self.connection.commit()
+
+        # Insert the new device into the devices table
+        device_query = "INSERT INTO devices (device_id, user_id) VALUES (%s, %s)"
+        device_values = (request.deviceId, request.userId)
+
+        try:
+            self.cursor.execute(device_query, device_values)
+            self.connection.commit()
+            return Reply(result="True", message="Device added successfully!")
+        except Exception as e:
+            return Reply(result="False", message=f"Error: {str(e)}")
+
+    def delete_device(self, request, context):
+        query = "DELETE FROM devices WHERE device_id = %s"
+        values = (request.deviceId,)
+
+        try:
+            self.cursor.execute(query, values)
+            self.connection.commit()
+            return Reply(result="True", message="Device deleted successfully!")
+        except Exception as e:
+            return Reply(result="False", message=f"Error: {str(e)}")
+
+    def get_all_devices(self, request, context):
+        query = "SELECT * FROM devices WHERE user_id = %s"
+        values = (request.userId,)
+        self.cursor.execute(query, values)
+        result = self.cursor.fetchall()
+
+        items = [Item(deviceId=row[0], userId=row[1]) for row in result]
+        return Reply(result="True", message="Devices retrieved successfully", items=items)
+
+    def create_account(self, request, context):
+        unique_user_id = uuid.uuid4()
+        unique_user_id = unique_user_id.hex
+        print(request.userName)
+        insert_query = "INSERT INTO users (user_id, user_name, user_password_hash) VALUES (%s, %s, %s)"
+        insert_values = (unique_user_id, request.userName, request.userPasswordHash)
+        
+        try:
+            self.cursor.execute(insert_query, insert_values)
+            self.connection.commit()
+            return Reply(result="True", message="User account created successfully!")
+        except Exception as e:
+            return Reply(result="False", message=f"Error: {str(e)}")
     
-    return client
+    def login(self, request, context):
+        print(request.userName)
+        select_query = "SELECT * FROM users WHERE user_name = %s"
+        select_values = (request.userName,)
+        self.cursor.execute(select_query, select_values)
+        result = self.cursor.fetchall()
 
+        print(result)
 
-def close_db(client: MongoClient) -> None:
-    if client:
-        # Close the connection when done
-        client.close()
+        result = result[0] if len(result) else None
 
+        if result == None:
+            return UserInstance(result="False")
+        
+        ## Validate user here
+        if (result[2] == request.userPasswordHash):
+            return UserInstance(result="True", userId=result[0], userName=result[1])
+        
+        return UserInstance(result="False, Invalid Username or Password")
 
-@app.route("/api/addNewDevice", methods=["POST"])
-@cross_origin()
-def add_new_device():
-    global db
-    device_data = request.get_json()
-    devices_collection = db.devices
-
-    # Add the new device to the collection
-    new_device = {"deviceId": device_data["deviceId"], "deviceName": device_data["deviceName"], "latitude": device_data["latitude"], "longitude": device_data["longitude"]}
-    devices_collection.insert_one(new_device)
-
-    return {"result": True, "message": "Device added successfully!"}, 201
-
-
-@app.route("/api/updateDevice", methods=["POST"])
-@cross_origin()
-def update_device():
-    global db
-    device_data = request.get_json()
-    devices_collection = db.devices
-
-    # Update the existing device in the collection
-    update_query = {"_id": ObjectId(device_data["_id"])}
-    update_data = {"$set": {"deviceId": device_data["deviceId"]}}
-    devices_collection.update_one(update_query, update_data)
-
-    return {"result": True, "message": "Device updated successfully!"}, 201
-
-
-@app.route("/api/deleteDevice", methods=["POST"])
-@cross_origin()
-def delete_device():
-    global db
-    device_data = request.get_json()
-    devices_collection = db.devices
-
-    # Delete the device from the collection
-    delete_query = {"_id": ObjectId(device_data["_id"])}
-    devices_collection.delete_one(delete_query)
-
-    return {"result": True, "message": "Device deleted successfully!"}, 201
-
-
-@app.route("/api/getAllDevices")
-@cross_origin()
-def get_all_devices():
-    global db
-    devices_collection = db.devices
-
-    # Get all devices from the collection
-    all_devices = [json.loads(json_util.dumps(device)) for device in devices_collection.find()]
-
-    return all_devices, 200
 
 
 def main() -> None:
-    global db
-    # Connect to the MongoDB database
-    client = connect_db()
-    # Get the database
-    db = client.get_database()
-    while True:
-        try:
-            app.run(host="0.0.0.0", port=5000, debug=True)
-        except KeyboardInterrupt:
-            break
-    close_db(client)
-
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    add_DeviceServicer_to_server(Device(), server)
+    server.add_insecure_port('[::]:5001')
+    server.start()
+    server.wait_for_termination()
 
 if __name__ == '__main__':
     main()
