@@ -1,5 +1,6 @@
 import 'package:grpc/grpc.dart';
 import 'package:logging/logging.dart';
+import 'dart:async';
 
 import '../constants/app_constants.dart';
 import '../models/response_model.dart';
@@ -18,6 +19,32 @@ class ApiService {
   }
 
   ApiService._init();
+
+  Future<Reply> publishCurrentLocation(Device device) async {
+
+    try {
+      final channel = ClientChannel(AppConstants.GRPC_URL,
+          port: AppConstants.GRPC_PORT,
+          options:
+              const ChannelOptions(credentials: ChannelCredentials.insecure()));
+
+      final client = DeviceClient(channel);
+
+      final response = await client.publish_current_location(Item()
+        ..userId = device.userId
+        ..deviceId = device.deviceId
+        ..deviceName = device.deviceName
+        ..latitude = device.latitude.toString()
+        ..longitude = device.longitude.toString());
+
+      await channel.shutdown();
+      
+      return Reply()..result = response.result;
+    } catch (e) {
+      log.warning(e.toString());
+      return Reply()..result = e.toString();
+    }
+  }
 
   //add new device
   Future<Reply> addNewDevice(Device device) async {
@@ -143,4 +170,29 @@ class ApiService {
       return UserInstance()..result = e.toString();
     }
   }
+}
+
+
+void main() async {
+  
+  print("Start Program...\n");
+
+  ApiService apiService = ApiService(); 
+
+  Device curr_device = Device(
+    userId: "test_user", 
+    deviceId: "f1740855-6716-11ee-9b42-107b44", 
+    deviceName: "Testing_device", 
+    latitude: double.parse("10.0"), 
+    longitude: double.parse("20.0"));
+
+    apiService.addNewDevice(curr_device);
+
+  Timer.periodic(Duration(seconds: 1), (timer) {
+    print("Publishing\n");
+    Future<Reply> reply = apiService.publishCurrentLocation(curr_device);
+
+    print(reply);
+  });
+
 }
