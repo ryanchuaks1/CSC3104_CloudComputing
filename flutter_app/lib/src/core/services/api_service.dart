@@ -172,7 +172,7 @@ class ApiService {
   }
 }
 
-
+// For Testing Purposes
 void main() async {
   
   print("Start Program...\n");
@@ -186,13 +186,20 @@ void main() async {
     latitude: double.parse("10.0"), 
     longitude: double.parse("20.0"));
 
-    apiService.addNewDevice(curr_device);
+  // Timer.periodic(Duration(seconds: 1), (timer) {
+  //   print("Publishing\n");
+  //   final reply = await apiService.publishCurrentLocation(curr_device);
 
-  Timer.periodic(Duration(seconds: 1), (timer) {
+  //   print(reply.message);
+  // });
+
+  void publishLocation(Timer timer) async {
     print("Publishing\n");
-    Future<Reply> reply = apiService.publishCurrentLocation(curr_device);
+    final reply = await apiService.publishCurrentLocation(curr_device);
 
-    print(reply);
-  });
+    print(reply.message);
+  }
+
+  Timer.periodic(Duration(seconds: 1), publishLocation);
 
 }

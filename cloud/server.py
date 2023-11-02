@@ -23,7 +23,7 @@ class Device(DeviceServicer):
 
         # Creating a new instance of Kafka_producer
         self._producer = kp.KafkaProducer(self.KAFKA_ADDRESS)
-        print("Connected to Kafka Producer successfully!")
+        print(f"Connected to Kafka Producer successfully at {self.KAFKA_ADDRESS}!")
 
         # Connect to the MySQL database
         try:
@@ -48,6 +48,10 @@ class Device(DeviceServicer):
                 'latitude' : request.latitude , 
                 'longtitude' : request.longtitude
             }
+
+            # Add a new topic for this device
+            added_topic = self._producer.addNewTopic(request.deviceId)
+            print(f"Added New Topic: {added_topic}")
 
             serialize_location_data = json.dumps(location_data)
             published = self._producer.publishLocationToKafka(deviceID=request.deviceId, location=location_data)
@@ -78,10 +82,6 @@ class Device(DeviceServicer):
         try:
             self.cursor.execute(device_query, device_values)
             self.connection.commit()
-
-            # Add a new topic for this device
-            added_topic = self._producer.addNewTopic(request.deviceId)
-            print(f"Added New Topic: {added_topic}")
 
             return Reply(result="True", message="Device added successfully!")
         except Exception as e:
