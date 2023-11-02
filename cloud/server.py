@@ -19,7 +19,7 @@ class Device(DeviceServicer):
         self.MYSQL_USER = "user"
         self.MYSQL_PASSWORD = "password"
         self.MYSQL_DATABASE = "mysql_db"
-        self.KAFKA_ADDRESS = "localhost:50052"
+        self.KAFKA_ADDRESS = "producer-service:50052"
 
         # Creating a new instance of Kafka_producer
         self._producer = kp.KafkaProducer(self.KAFKA_ADDRESS)
