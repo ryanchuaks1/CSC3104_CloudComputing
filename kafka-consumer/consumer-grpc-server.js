@@ -6,6 +6,7 @@ const VOLUME_PATH = __dirname + '/data';
 var grpc = require('@grpc/grpc-js');
 var protoLoader = require('@grpc/proto-loader');
 var kafka_consumer = require('./consumer.js');
+const fs = require('fs');
 var packageDefinition = protoLoader.loadSync(
     PROTO_PATH,
     {
@@ -40,7 +41,10 @@ function Subscribe(call, callback){
                 topic: call.request.udid,
                 fromBeginning: true
             });
-    
+
+            const file_path = `${VOLUME_PATH}/${call.request.udid}.txt`;
+            const write_stream = fs.createWriteStream(file_path, { flags: 'a' , encoding: 'utf-8' });
+
             await consumer.run({
                 eachMessage: async ({ topic, partition, message }) => {
                     call.write({udid: call.request.udid, timestamp: message.key.toString(), location: message.value.toString()});
@@ -48,12 +52,16 @@ function Subscribe(call, callback){
                         key: message.key.toString(),
                         value: message.value.toString(),
                     });
-                    // count++;
-                    // if(count === 5){
-                    //     await consumer.disconnect();
-                    //     call.end();
-                    //     return;
-                    // }
+
+                    write_stream.write("timestamp: " + message.key.toString() + ", location: " + message.value.toString() + "\n");
+
+                    count++;
+                    if(count === 5){
+                        write_stream.end();
+                        call.end();
+                        await consumer.disconnect();
+                        return;
+                    }
                 },
             });
 

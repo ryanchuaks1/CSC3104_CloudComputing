@@ -29,7 +29,7 @@ class Kafka_Consumer{
                     fromBeginning: false
                 });
 
-                const write_stream = fs.createWriteStream(file_path, { flags: 'a' });
+                //const write_stream = fs.createWriteStream(file_path, { flags: 'a' , encoding: 'utf-8' });
 
                 await this._consumer.run({
                     eachMessage: async({ topic, partition, message }) => {
@@ -38,12 +38,13 @@ class Kafka_Consumer{
                             value: message.value.toString(),
                         });
 
-                        write_stream.write(file_path, "Timestamp: " + message.key.toString() + ", Location: " + message.value.toString() + "\n");
-                        return;
+                        // write_stream.write(file_path, "Timestamp: " + message.key.toString() + ", Location: " + message.value.toString() + "\n");
                     }
                 });
 
-                write_stream.end();
+                //write_stream.end();
+
+                break;
             };
 
         } catch (error) {
