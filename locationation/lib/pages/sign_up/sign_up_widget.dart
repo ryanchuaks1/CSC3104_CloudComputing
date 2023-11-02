@@ -425,53 +425,44 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                                             return;
                                           }
 
-                                          if (Navigator.of(context).canPop()) {
-                                            context.pop();
-                                          }
-                                          context.pushNamed(
-                                            'Home',
-                                            extra: <String, dynamic>{
-                                              kTransitionInfoKey:
-                                                  TransitionInfo(
-                                                hasTransition: true,
-                                                transitionType:
-                                                    PageTransitionType.fade,
-                                                duration:
-                                                    Duration(milliseconds: 200),
-                                              ),
-                                            },
-                                          );
+                                          var result = "";
+                                          await ApiService()
+                                              .createAccount(User_Account(
+                                                  userName: _model
+                                                      .emailAddressController
+                                                      .text,
+                                                  userPasswordHash: _model
+                                                      .passwordController.text))
+                                              .then((data) {
+                                            if (data.result == "True") {
+                                              result = data.result;
+                                            } else {
+                                              result = data.result;
+                                              print(data.result);
+                                            }
+                                          });
 
-                                          // await ApiService()
-                                          //     .createAccount(User_Account(
-                                          //         userName: _model
-                                          //             .emailAddressController
-                                          //             .text,
-                                          //         userPasswordHash: _model
-                                          //             .passwordController.text))
-                                          //     .then((data) {
-                                          //   if (data.result == "True") {
-                                          //     if (Navigator.of(context)
-                                          //         .canPop()) {
-                                          //       context.pop();
-                                          //     }
-                                          //     context.pushNamed(
-                                          //       'Home',
-                                          //       extra: <String, dynamic>{
-                                          //         kTransitionInfoKey:
-                                          //             TransitionInfo(
-                                          //           hasTransition: true,
-                                          //           transitionType:
-                                          //               PageTransitionType.fade,
-                                          //           duration: Duration(
-                                          //               milliseconds: 200),
-                                          //         ),
-                                          //       },
-                                          //     );
-                                          //   } else {
-                                          //     print(data.result);
-                                          //   }
-                                          // });
+                                          if (result == "True") {
+                                            if (Navigator.of(context)
+                                                .canPop()) {
+                                              context.pop();
+                                            }
+                                            context.pushNamed(
+                                              'Home',
+                                              extra: <String, dynamic>{
+                                                kTransitionInfoKey:
+                                                    TransitionInfo(
+                                                  hasTransition: true,
+                                                  transitionType:
+                                                      PageTransitionType.fade,
+                                                  duration: Duration(
+                                                      milliseconds: 200),
+                                                ),
+                                              },
+                                            );
+                                          } else {
+                                            print(result);
+                                          }
                                         },
                                         text: 'Create Account',
                                         options: FFButtonOptions(
