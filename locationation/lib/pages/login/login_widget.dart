@@ -1,3 +1,6 @@
+import 'package:locationation/core/models/user_model.dart';
+import 'package:locationation/core/services/api_service.dart';
+
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
@@ -394,25 +397,49 @@ class _LoginWidgetState extends State<LoginWidget> {
                                           .validate()) {
                                     return;
                                   }
-                                  if (Navigator.of(context).canPop()) {
-                                    context.pop();
+
+                                  var result = "";
+                                  var user_id = "";
+                                  await ApiService()
+                                      .login(User_Account(
+                                          userName: _model.emailController.text,
+                                          userPasswordHash:
+                                              _model.passwordController.text))
+                                      .then((data) {
+                                    if (data.result == "True") {
+                                      result = data.result;
+                                      user_id = data.userId;
+                                    } else {
+                                      result = data.result;
+                                    }
+                                  });
+
+                                  if (result == "True") {
+                                    if (Navigator.of(context).canPop()) {
+                                      context.pop();
+                                    }
+                                    context.pushNamed(
+                                      'Home',
+                                      queryParameters: {
+                                        'isScrolling': serializeParam(
+                                          false,
+                                          ParamType.bool,
+                                        ),
+                                        'current_user': serializeParam(
+                                            user_id, ParamType.String),
+                                      }.withoutNulls,
+                                      extra: <String, dynamic>{
+                                        kTransitionInfoKey: TransitionInfo(
+                                          hasTransition: true,
+                                          transitionType:
+                                              PageTransitionType.fade,
+                                          duration: Duration(milliseconds: 200),
+                                        ),
+                                      },
+                                    );
+                                  } else {
+                                    print(result);
                                   }
-                                  context.pushNamed(
-                                    'Home',
-                                    queryParameters: {
-                                      'isScrolling': serializeParam(
-                                        false,
-                                        ParamType.bool,
-                                      ),
-                                    }.withoutNulls,
-                                    extra: <String, dynamic>{
-                                      kTransitionInfoKey: TransitionInfo(
-                                        hasTransition: true,
-                                        transitionType: PageTransitionType.fade,
-                                        duration: Duration(milliseconds: 200),
-                                      ),
-                                    },
-                                  );
                                 },
                                 text: 'Login',
                                 options: FFButtonOptions(

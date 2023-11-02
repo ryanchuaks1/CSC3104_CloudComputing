@@ -20,10 +20,12 @@ class HomeWidget extends StatefulWidget {
   const HomeWidget({
     Key? key,
     bool? isScrolling,
+    required this.current_user,
   })  : this.isScrolling = isScrolling ?? true,
         super(key: key);
 
   final bool isScrolling;
+  final String current_user;
 
   @override
   _HomeWidgetState createState() => _HomeWidgetState();
@@ -52,6 +54,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    print(widget.current_user);
     _model = createModel(context, () => HomeModel());
 
     // On page load action.
@@ -200,6 +203,9 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                         false,
                                         ParamType.bool,
                                       ),
+                                      'current_user': serializeParam(
+                                          widget.current_user,
+                                          ParamType.String),
                                     }.withoutNulls,
                                   );
                                 },
@@ -265,10 +271,16 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                     final columnGetAllDevicesResponse = snapshot.data!;
                     return Builder(
                       builder: (context) {
-                        final devices = getJsonField(
-                          columnGetAllDevicesResponse.jsonBody,
-                          r'''$.deviceList''',
-                        ).toList();
+                        final devices = [];
+                        try {
+                          final devices = getJsonField(
+                            columnGetAllDevicesResponse.jsonBody,
+                            r'''$.deviceList''',
+                          ).toList();
+                        } catch (e) {
+                          final devices = [];
+                        }
+
                         return SingleChildScrollView(
                           child: Column(
                             mainAxisSize: MainAxisSize.max,

@@ -16,9 +16,11 @@ class AddDeviceWidget extends StatefulWidget {
   const AddDeviceWidget({
     Key? key,
     required this.isBTEnabled,
+    required this.current_user,
   }) : super(key: key);
 
   final bool? isBTEnabled;
+  final String current_user;
 
   @override
   _AddDeviceWidgetState createState() => _AddDeviceWidgetState();
@@ -33,6 +35,8 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
   void initState() {
     super.initState();
     _model = createModel(context, () => AddDeviceModel());
+    print("Found Devices");
+    print(_model.devices2);
 
     // On page load action.
     SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -116,7 +120,25 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
                               size: 30.0,
                             ),
                             onPressed: () async {
-                              context.pop();
+                              if (Navigator.of(context).canPop()) {
+                                context.pop();
+                              }
+                              context.pushNamed('Home',
+                                  queryParameters: {
+                                    'isScrolling': serializeParam(
+                                      false,
+                                      ParamType.bool,
+                                    ),
+                                    'current_user': serializeParam(
+                                        widget.current_user, ParamType.String),
+                                  }.withoutNulls,
+                                  extra: <String, dynamic>{
+                                    kTransitionInfoKey: TransitionInfo(
+                                      hasTransition: true,
+                                      transitionType: PageTransitionType.fade,
+                                      duration: Duration(milliseconds: 200),
+                                    ),
+                                  });
                             },
                           ),
                         ),
@@ -233,15 +255,17 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
                             _model.isBluetoothEnabled = true;
                           });
 
-                          context.pushNamed(
-                            'AddDevice',
-                            queryParameters: {
-                              'isBTEnabled': serializeParam(
-                                false,
-                                ParamType.bool,
-                              ),
-                            }.withoutNulls,
-                          );
+                          // context.pushNamed(
+                          //   'AddDevice',
+                          //   queryParameters: {
+                          //     'isBTEnabled': serializeParam(
+                          //       false,
+                          //       ParamType.bool,
+                          //     ),
+                          //     'current_user': serializeParam(
+                          //         widget.current_user, ParamType.String),
+                          //   }.withoutNulls,
+                          // );
 
                           if (_model.isBluetoothEnabled ? true : true) {
                             setState(() {
@@ -265,14 +289,17 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
                                   .cast<BTDeviceStruct>();
                             });
                           }
-
                           setState(() {});
+
+                          Future.delayed(const Duration(seconds: 5));
                         } else {
                           _model.isTurningOff =
                               await actions.turnOffBluetooth();
                           setState(() {
                             _model.isBluetoothEnabled = false;
                           });
+
+                          _model.devices2 = [];
 
                           setState(() {});
                         }
@@ -288,47 +315,49 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
                 ],
               ),
             ),
-            Builder(
-              builder: (context) {
-                final displayConnectedDevices =
-                    _model.connectedDevices.toList();
-                return ListView.builder(
-                  padding: EdgeInsets.zero,
-                  shrinkWrap: true,
-                  scrollDirection: Axis.vertical,
-                  itemCount: displayConnectedDevices.length,
-                  itemBuilder: (context, displayConnectedDevicesIndex) {
-                    final displayConnectedDevicesItem =
-                        displayConnectedDevices[displayConnectedDevicesIndex];
-                    return Padding(
-                      padding: EdgeInsetsDirectional.fromSTEB(
-                          10.0, 10.0, 10.0, 10.0),
-                      child: Container(
-                        width: 100.0,
-                        height: 70.0,
-                        decoration: BoxDecoration(
-                          color: FlutterFlowTheme.of(context).accent1,
-                          borderRadius: BorderRadius.circular(15.0),
+            Expanded (
+              flex: 2,
+              child: Builder(
+                builder: (context) {
+                  final displayConnectedDevices = _model.foundDevices.toList();
+                  return ListView.builder(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    scrollDirection: Axis.vertical,
+                    itemCount: displayConnectedDevices.length,
+                    itemBuilder: (context, displayConnectedDevicesIndex) {
+                      final displayConnectedDevicesItem =
+                          displayConnectedDevices[displayConnectedDevicesIndex];
+                      return Padding(
+                        padding: EdgeInsetsDirectional.fromSTEB(
+                            10.0, 10.0, 10.0, 10.0),
+                        child: Container(
+                          width: 100.0,
+                          height: 70.0,
+                          decoration: BoxDecoration(
+                            color: FlutterFlowTheme.of(context).accent1,
+                            borderRadius: BorderRadius.circular(15.0),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                displayConnectedDevicesItem.name,
+                                style: FlutterFlowTheme.of(context).bodyMedium,
+                              ),
+                              Text(
+                                displayConnectedDevicesItem.id,
+                                style: FlutterFlowTheme.of(context).bodyMedium,
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.max,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              displayConnectedDevicesItem.name,
-                              style: FlutterFlowTheme.of(context).bodyMedium,
-                            ),
-                            Text(
-                              displayConnectedDevicesItem.id,
-                              style: FlutterFlowTheme.of(context).bodyMedium,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
             Align(
               alignment: AlignmentDirectional(0.00, 0.05),
