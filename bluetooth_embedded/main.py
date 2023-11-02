@@ -61,4 +61,4 @@ print(ct)
 while True:
     advertise_bluetooth_message(sp, ct)
     
-    time.sleep(0.2)
+    time.sleep(0.1)

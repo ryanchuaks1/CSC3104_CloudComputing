@@ -1,3 +1,8 @@
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:locationation/backend/schema/util/snackbar.dart';
+import 'package:locationation/core/models/device_model.dart';
+import 'package:locationation/core/services/api_service.dart';
+
 import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
@@ -30,6 +35,10 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
   late AddDeviceModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  late String selected_bluetooth_device = "";
+
+  late String ble_device_id;
 
   @override
   void initState() {
@@ -291,15 +300,14 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
                           }
                           setState(() {});
 
-                          Future.delayed(const Duration(seconds: 5));
+                          Future.delayed(const Duration(seconds: 1));
                         } else {
                           _model.isTurningOff =
                               await actions.turnOffBluetooth();
+                          _model.devices2 = [];
                           setState(() {
                             _model.isBluetoothEnabled = false;
                           });
-
-                          _model.devices2 = [];
 
                           setState(() {});
                         }
@@ -315,7 +323,7 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
                 ],
               ),
             ),
-            Expanded (
+            Expanded(
               flex: 2,
               child: Builder(
                 builder: (context) {
@@ -331,26 +339,40 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
                       return Padding(
                         padding: EdgeInsetsDirectional.fromSTEB(
                             10.0, 10.0, 10.0, 10.0),
-                        child: Container(
-                          width: 100.0,
-                          height: 70.0,
-                          decoration: BoxDecoration(
-                            color: FlutterFlowTheme.of(context).accent1,
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                displayConnectedDevicesItem.name,
-                                style: FlutterFlowTheme.of(context).bodyMedium,
-                              ),
-                              Text(
-                                displayConnectedDevicesItem.id,
-                                style: FlutterFlowTheme.of(context).bodyMedium,
-                              ),
-                            ],
+                        child: new GestureDetector(
+                          onTap: () {
+                            selected_bluetooth_device =
+                                displayConnectedDevicesItem.id;
+                            print(selected_bluetooth_device);
+                            setState(() {});
+                          },
+                          child: Container(
+                            width: 100.0,
+                            height: 70.0,
+                            decoration: BoxDecoration(
+                              color: FlutterFlowTheme.of(context).accent1,
+                              borderRadius: BorderRadius.circular(15.0),
+                              border: selected_bluetooth_device ==
+                                      displayConnectedDevicesItem.id
+                                  ? Border.all(width: 2, color: Colors.blue)
+                                  : null,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  displayConnectedDevicesItem.name,
+                                  style:
+                                      FlutterFlowTheme.of(context).bodyMedium,
+                                ),
+                                Text(
+                                  displayConnectedDevicesItem.id,
+                                  style:
+                                      FlutterFlowTheme.of(context).bodyMedium,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -365,9 +387,49 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
                 padding: EdgeInsetsDirectional.fromSTEB(0.0, 24.0, 0.0, 0.0),
                 child: FFButtonWidget(
                   onPressed: () async {
-                    context.pushNamed('Home');
+                    final device =
+                        BluetoothDevice.fromId(selected_bluetooth_device);
+                    print(device);
+
+                    await device.connect(timeout: const Duration(seconds: 5));
+                    await receiveData(device);
+
+                    if (ble_device_id.isNotEmpty) {
+                      await ApiService()
+                          .addNewDevice(Device(
+                        userId: widget.current_user,
+                        deviceId: ble_device_id,
+                        deviceName: "Pico W",
+                        latitude: 0,
+                        longitude: 0,
+                      ))
+                          .then((data) {
+                        if (data.result == "True") {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text("Successfully added device",
+                                style: FlutterFlowTheme.of(context).bodyMedium),
+                            backgroundColor: Colors.blue,
+                          ));
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(
+                                "Failed to add device, Please try again.",
+                                style: FlutterFlowTheme.of(context).bodyMedium),
+                            backgroundColor: Colors.red,
+                          ));
+                        }
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Failed to add device, Please try again.",
+                            style: FlutterFlowTheme.of(context).bodyMedium),
+                        backgroundColor: Colors.red,
+                      ));
+                    }
+                    setState(() {});
+                    print(ble_device_id);
                   },
-                  text: 'Save Changes',
+                  text: 'Add Device',
                   options: FFButtonOptions(
                     width: 270.0,
                     height: 50.0,
@@ -394,5 +456,27 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
         ),
       ),
     );
+  }
+
+  Future<String?> receiveData(BluetoothDevice device) async {
+    final services = await device.discoverServices();
+    for (BluetoothService service in services) {
+      for (BluetoothCharacteristic characteristic in service.characteristics) {
+        final isRead = characteristic.properties.read;
+        final isNotify = characteristic.properties.notify;
+
+        if (isRead && isNotify) {
+          final subscription =
+              characteristic.onValueReceived.listen((value) {});
+          device.cancelWhenDisconnected(subscription);
+          await characteristic.setNotifyValue(true);
+          Future.delayed(const Duration(seconds: 5));
+          final value = await characteristic.read();
+          device.disconnect(timeout: 10);
+          ble_device_id = String.fromCharCodes(value);
+          return String.fromCharCodes(value);
+        }
+      }
+    }
   }
 }
