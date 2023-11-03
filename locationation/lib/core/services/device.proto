@@ -4,6 +4,7 @@ package device;
 
 // Device definition
 service Device {
+  rpc publish_current_location (Item) returns (Reply) {}
   rpc add_new_device (Item) returns (Reply) {}
   rpc delete_device (Item) returns (Reply) {}
   rpc get_all_devices (Item) returns (Reply) {}

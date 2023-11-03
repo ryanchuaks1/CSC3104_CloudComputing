@@ -84,7 +84,7 @@ class Location extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Location', package: const $pb.PackageName(_omitMessageNames ? '' : 'kafka_producer_grpc'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'udid')
-    ..aOS(3, _omitFieldNames ? '' : 'location')
+    ..aOS(2, _omitFieldNames ? '' : 'location')
     ..hasRequiredFields = false
   ;
 
@@ -118,14 +118,14 @@ class Location extends $pb.GeneratedMessage {
   @$pb.TagNumber(1)
   void clearUdid() => clearField(1);
 
-  @$pb.TagNumber(3)
+  @$pb.TagNumber(2)
   $core.String get location => $_getSZ(1);
-  @$pb.TagNumber(3)
+  @$pb.TagNumber(2)
   set location($core.String v) { $_setString(1, v); }
-  @$pb.TagNumber(3)
+  @$pb.TagNumber(2)
   $core.bool hasLocation() => $_has(1);
-  @$pb.TagNumber(3)
-  void clearLocation() => clearField(3);
+  @$pb.TagNumber(2)
+  void clearLocation() => clearField(2);
 }
 
 class Response extends $pb.GeneratedMessage {

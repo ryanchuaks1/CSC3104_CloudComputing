@@ -1,9 +1,16 @@
 import grpc
 import uuid
+import json
 from concurrent import futures
 import mysql.connector
 from device_pb2 import Item, Reply, UserInstance
 from device_pb2_grpc import DeviceServicer, add_DeviceServicer_to_server
+
+import kafkaProducer as kp
+
+#Testing Variables:
+temp_lat = "10.000000"
+temp_long = "20.00000"
 
 class Device(DeviceServicer):
     def __init__(self) -> None:
@@ -12,6 +19,11 @@ class Device(DeviceServicer):
         self.MYSQL_USER = "user"
         self.MYSQL_PASSWORD = "password"
         self.MYSQL_DATABASE = "mysql_db"
+        self.KAFKA_ADDRESS = "producer-service:50052"
+
+        # Creating a new instance of Kafka_producer
+        self._producer = kp.KafkaProducer(self.KAFKA_ADDRESS)
+        print(f"Connected to Kafka Producer successfully at {self.KAFKA_ADDRESS}!")
 
         # Connect to the MySQL database
         try:
@@ -26,6 +38,30 @@ class Device(DeviceServicer):
         except Exception as e:
             print("An error occurred:", e)
 
+#Publish Location of current device
+#  - Get the Location of the current request
+#  - Serialize it into Json
+#  - Publish it onto kafka
+    def publish_current_location(self, request, context):
+        try:
+            location_data = {
+                'latitude' : request.latitude , 
+                'longtitude' : request.longtitude
+            }
+
+            # Add a new topic for this device
+            added_topic = self._producer.addNewTopic(request.deviceId)
+            print(f"Added New Topic: {added_topic}")
+
+            serialize_location_data = json.dumps(location_data)
+            published = self._producer.publishLocationToKafka(deviceID=request.deviceId, location=location_data)
+            print(f"Location Published: {published}")
+            return Reply(result="True", message="Location successfully Published")
+        
+        except Exception as e:
+            return Reply(result="False", message=f"Error: {str(e)}")
+
+# Use to add a new device to a User
     def add_new_device(self, request, context):
         query = "SELECT * FROM users WHERE user_id = %s"
         values = (request.userId,)
@@ -46,10 +82,12 @@ class Device(DeviceServicer):
         try:
             self.cursor.execute(device_query, device_values)
             self.connection.commit()
+
             return Reply(result="True", message="Device added successfully!")
         except Exception as e:
             return Reply(result="False", message=f"Error: {str(e)}")
-
+        
+# Use to delete a device from the sql table
     def delete_device(self, request, context):
         query = "DELETE FROM devices WHERE device_id = %s"
         values = (request.deviceId,)
@@ -61,6 +99,7 @@ class Device(DeviceServicer):
         except Exception as e:
             return Reply(result="False", message=f"Error: {str(e)}")
 
+# Get All Devices from the User
     def get_all_devices(self, request, context):
         query = "SELECT * FROM devices WHERE user_id = %s"
         values = (request.userId,)

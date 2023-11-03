@@ -6,7 +6,10 @@ import device_pb2 as device__pb2
 
 
 class DeviceStub(object):
-    """Device definition
+    """For Compilation
+    Run in Current Directory : python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./device.proto
+
+    Device definition
     """
 
     def __init__(self, channel):
@@ -15,6 +18,11 @@ class DeviceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.publish_current_location = channel.unary_unary(
+                '/device.Device/publish_current_location',
+                request_serializer=device__pb2.Item.SerializeToString,
+                response_deserializer=device__pb2.Reply.FromString,
+                )
         self.add_new_device = channel.unary_unary(
                 '/device.Device/add_new_device',
                 request_serializer=device__pb2.Item.SerializeToString,
@@ -43,8 +51,17 @@ class DeviceStub(object):
 
 
 class DeviceServicer(object):
-    """Device definition
+    """For Compilation
+    Run in Current Directory : python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./device.proto
+
+    Device definition
     """
+
+    def publish_current_location(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def add_new_device(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -79,6 +96,11 @@ class DeviceServicer(object):
 
 def add_DeviceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'publish_current_location': grpc.unary_unary_rpc_method_handler(
+                    servicer.publish_current_location,
+                    request_deserializer=device__pb2.Item.FromString,
+                    response_serializer=device__pb2.Reply.SerializeToString,
+            ),
             'add_new_device': grpc.unary_unary_rpc_method_handler(
                     servicer.add_new_device,
                     request_deserializer=device__pb2.Item.FromString,
@@ -112,8 +134,28 @@ def add_DeviceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class Device(object):
-    """Device definition
+    """For Compilation
+    Run in Current Directory : python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./device.proto
+
+    Device definition
     """
+
+    @staticmethod
+    def publish_current_location(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/device.Device/publish_current_location',
+            device__pb2.Item.SerializeToString,
+            device__pb2.Reply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def add_new_device(request,
