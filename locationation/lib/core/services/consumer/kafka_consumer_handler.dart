@@ -1,15 +1,3 @@
-// import 'dart:convert';
-
-// import 'package:flutter/material.dart';
-// import 'package:http/http.dart' as http;
-// import 'package:logging/logging.dart';
-
-// import '../../constants/app_constants.dart';
-// import '../../constants/device_method_constants.dart';
-// import '../../models/response_model.dart';
-// import '../../models/device_list_model.dart';
-// import '../../models/device_model.dart';
-
 import 'package:grpc/grpc.dart';
 import 'package:locationation/core/services/consumer/kafka_consumer.pbgrpc.dart';
 
