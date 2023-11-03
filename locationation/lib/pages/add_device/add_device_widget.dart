@@ -390,9 +390,17 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
                     final device =
                         BluetoothDevice.fromId(selected_bluetooth_device);
                     print(device);
-
-                    await device.connect(timeout: const Duration(seconds: 5));
-                    await receiveData(device);
+                    try {
+                      await device.connect(timeout: const Duration(seconds: 5));
+                      await receiveData(device);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text("Failed to add device, Please try again.",
+                            style: FlutterFlowTheme.of(context).bodyMedium),
+                        backgroundColor: Colors.red,
+                      ));
+                      setState(() {});
+                    }
 
                     if (ble_device_id.isNotEmpty) {
                       await ApiService()

@@ -1,3 +1,9 @@
+import 'dart:async';
+
+import 'package:locationation/core/models/device_list_model.dart';
+import 'package:locationation/core/models/device_new_model.dart';
+import 'package:locationation/core/services/api_service.dart';
+
 import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
@@ -36,6 +42,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  Timer? timer;
+
+  List<DeviceNew> _devices = [];
+
   final animationsMap = {
     'containerOnPageLoadAnimation': AnimationInfo(
       trigger: AnimationTrigger.onPageLoad,
@@ -57,14 +67,16 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     print(widget.current_user);
     _model = createModel(context, () => HomeModel());
 
+    timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getAllDevices());
+
     // On page load action.
-    SchedulerBinding.instance.addPostFrameCallback((_) async {
-      _model.foundDevices = await actions.findDevices();
-      setState(() {
-        _model.scannedDevices =
-            _model.foundDevices!.toList().cast<BTDeviceStruct>();
-      });
-    });
+    // SchedulerBinding.instance.addPostFrameCallback((_) async {
+    //   _model.foundDevices = await actions.findDevices();
+    //   setState(() {
+    //     _model.scannedDevices =
+    //         _model.foundDevices!.toList().cast<BTDeviceStruct>();
+    //   });
+    // });
 
     setupAnimations(
       animationsMap.values.where((anim) =>
@@ -74,11 +86,21 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     );
   }
 
+  Future<List<DeviceNew>> getAllDevices() async {
+    print("Test");
+    _devices = await ApiService().getAllDevices(widget.current_user);
+    print(_devices.length);
+    setState(() {});
+    return _devices;
+  }
+
   @override
   void dispose() {
     _model.dispose();
 
     super.dispose();
+    timer!.cancel();
+    timer = null;
   }
 
   @override
@@ -146,7 +168,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                           size: 18.0,
                         ),
                         onPressed: () async {
-                          context.pushNamed(
+                          context.pushReplacementNamed(
                             'Login',
                             queryParameters: {
                               'isBTEnabled': serializeParam(
@@ -196,7 +218,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                   0.0, 0.0, 20.0, 0.0),
                               child: FFButtonWidget(
                                 onPressed: () async {
-                                  context.pushNamed(
+                                  context.pushReplacementNamed(
                                     'AddDevice',
                                     queryParameters: {
                                       'isBTEnabled': serializeParam(
@@ -242,165 +264,255 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
             ),
             Expanded(
               child: Container(
-                width: MediaQuery.sizeOf(context).width * 1.0,
-                height: MediaQuery.sizeOf(context).height * 1.0,
-                decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).secondaryBackground,
-                ),
-                child: FutureBuilder<ApiCallResponse>(
-                  future: DeviceAPIGroup.getAllDevicesCall.call(),
-                  builder: (context, snapshot) {
-                    // Customize what your widget looks like when it's loading.
-                    if (!snapshot.hasData) {
-                      return Center(
+                  width: MediaQuery.sizeOf(context).width * 1.0,
+                  height: MediaQuery.sizeOf(context).height * 1.0,
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).secondaryBackground,
+                  ),
+                  child: SingleChildScrollView(
+                      child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: List.generate(_devices.length, (index) {
+                      final devicesItem = _devices[index];
+                      return Align(
+                        alignment: AlignmentDirectional(0.00, -1.00),
                         child: Padding(
                           padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 100.0, 0.0, 0.0),
-                          child: SizedBox(
-                            width: 50.0,
-                            height: 50.0,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                FlutterFlowTheme.of(context).primary,
+                              12.0, 12.0, 12.0, 12.0),
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: FlutterFlowTheme.of(context).accent1,
+                              borderRadius: BorderRadius.circular(20.0),
+                              shape: BoxShape.rectangle,
+                              border: Border.all(
+                                color: Colors.white,
                               ),
                             ),
-                          ),
-                        ),
-                      );
-                    }
-                    final columnGetAllDevicesResponse = snapshot.data!;
-                    return Builder(
-                      builder: (context) {
-                        final devices = [];
-                        try {
-                          final devices = getJsonField(
-                            columnGetAllDevicesResponse.jsonBody,
-                            r'''$.deviceList''',
-                          ).toList();
-                        } catch (e) {
-                          final devices = [];
-                        }
-
-                        return SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            children:
-                                List.generate(devices.length, (devicesIndex) {
-                              final devicesItem = devices[devicesIndex];
-                              return Align(
-                                alignment: AlignmentDirectional(0.00, -1.00),
-                                child: Padding(
-                                  padding: EdgeInsetsDirectional.fromSTEB(
-                                      12.0, 12.0, 12.0, 12.0),
-                                  child: Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          FlutterFlowTheme.of(context).accent1,
-                                      borderRadius: BorderRadius.circular(20.0),
-                                      shape: BoxShape.rectangle,
-                                      border: Border.all(
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                            child: Padding(
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                  12.0, 6.0, 12.0, 6.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
                                     child: Padding(
                                       padding: EdgeInsetsDirectional.fromSTEB(
-                                          12.0, 6.0, 12.0, 6.0),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.max,
+                                          12.0, 0.0, 12.0, 0.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
                                         mainAxisAlignment:
                                             MainAxisAlignment.start,
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.center,
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(
-                                                      12.0, 0.0, 12.0, 0.0),
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    getJsonField(
-                                                      columnGetAllDevicesResponse
-                                                          .jsonBody,
-                                                      r'''$.deviceName''',
-                                                    ).toString(),
-                                                    style: FlutterFlowTheme.of(
-                                                            context)
-                                                        .headlineSmall
-                                                        .override(
-                                                          fontFamily:
-                                                              'Work Sans',
-                                                          fontSize: 18.0,
-                                                        ),
-                                                  ),
-                                                  Text(
-                                                    'User',
-                                                    style: FlutterFlowTheme.of(
-                                                            context)
-                                                        .bodySmall
-                                                        .override(
-                                                          fontFamily:
-                                                              'Plus Jakarta Sans',
-                                                          color:
-                                                              Color(0xFF4B39EF),
-                                                          fontSize: 12.0,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                        ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(0.0, 4.0,
-                                                                0.0, 0.0),
-                                                    child: Text(
-                                                      'Last Updated',
-                                                      style: FlutterFlowTheme
-                                                              .of(context)
-                                                          .labelMedium
-                                                          .override(
-                                                            fontFamily:
-                                                                'Plus Jakarta Sans',
-                                                            color: Color(
-                                                                0xFF57636C),
-                                                            fontSize: 12.0,
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
+                                          Text(
+                                            devicesItem.deviceId,
+                                            style: FlutterFlowTheme.of(context)
+                                                .headlineSmall
+                                                .override(
+                                                  fontFamily: 'Work Sans',
+                                                  fontSize: 18.0,
+                                                ),
                                           ),
-                                          Icon(
-                                            Icons.keyboard_arrow_right_rounded,
-                                            color: Color(0xFF57636C),
-                                            size: 24.0,
+                                          Text(
+                                            'User',
+                                            style: FlutterFlowTheme.of(context)
+                                                .bodySmall
+                                                .override(
+                                                  fontFamily:
+                                                      'Plus Jakarta Sans',
+                                                  color: Color(0xFF4B39EF),
+                                                  fontSize: 12.0,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                          ),
+                                          Padding(
+                                            padding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    0.0, 4.0, 0.0, 0.0),
+                                            child: Text(
+                                              'Last Updated',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .labelMedium
+                                                  .override(
+                                                    fontFamily:
+                                                        'Plus Jakarta Sans',
+                                                    color: Color(0xFF57636C),
+                                                    fontSize: 12.0,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ).animateOnPageLoad(animationsMap[
-                                      'containerOnPageLoadAnimation']!),
-                                ),
-                              );
-                            }),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
+                                  ),
+                                  Icon(
+                                    Icons.keyboard_arrow_right_rounded,
+                                    color: Color(0xFF57636C),
+                                    size: 24.0,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ).animateOnPageLoad(
+                              animationsMap['containerOnPageLoadAnimation']!),
+                        ),
+                      );
+                    }),
+                  ))),
+            )
+            // child: Container(
+            //   width: MediaQuery.sizeOf(context).width * 1.0,
+            //   height: MediaQuery.sizeOf(context).height * 1.0,
+            //   decoration: BoxDecoration(
+            //     color: FlutterFlowTheme.of(context).secondaryBackground,
+            //   ),
+            //   child: FutureBuilder(
+            //     future: getAllDevices(),
+            //     builder: (context, snapshot) {
+            //       // Customize what your widget looks like when it's loading.
+            //       if (!snapshot.hasData) {
+            //         return Center(
+            //           child: Padding(
+            //             padding: EdgeInsetsDirectional.fromSTEB(
+            //                 0.0, 100.0, 0.0, 0.0),
+            //             child: SizedBox(
+            //               width: 50.0,
+            //               height: 50.0,
+            //               child: CircularProgressIndicator(
+            //                 valueColor: AlwaysStoppedAnimation<Color>(
+            //                   FlutterFlowTheme.of(context).primary,
+            //                 ),
+            //               ),
+            //             ),
+            //           ),
+            //         );
+            //       }
+            //       return Builder(
+            //         builder: (context) {
+            //           final devices = snapshot.data != null
+            //               ? snapshot.data as List<DeviceList>
+            //               : const [];
+            //           return SingleChildScrollView(
+            //             child: Column(
+            //               mainAxisSize: MainAxisSize.max,
+            //               children:
+            //                   List.generate(devices.length, (devicesIndex) {
+            //                 final devicesItem = devices[devicesIndex];
+            //                 return Align(
+            //                   alignment: AlignmentDirectional(0.00, -1.00),
+            //                   child: Padding(
+            //                     padding: EdgeInsetsDirectional.fromSTEB(
+            //                         12.0, 12.0, 12.0, 12.0),
+            //                     child: Container(
+            //                       width: double.infinity,
+            //                       decoration: BoxDecoration(
+            //                         color:
+            //                             FlutterFlowTheme.of(context).accent1,
+            //                         borderRadius: BorderRadius.circular(20.0),
+            //                         shape: BoxShape.rectangle,
+            //                         border: Border.all(
+            //                           color: Colors.white,
+            //                         ),
+            //                       ),
+            //                       child: Padding(
+            //                         padding: EdgeInsetsDirectional.fromSTEB(
+            //                             12.0, 6.0, 12.0, 6.0),
+            //                         child: Row(
+            //                           mainAxisSize: MainAxisSize.max,
+            //                           mainAxisAlignment:
+            //                               MainAxisAlignment.start,
+            //                           crossAxisAlignment:
+            //                               CrossAxisAlignment.center,
+            //                           children: [
+            //                             Expanded(
+            //                               child: Padding(
+            //                                 padding: EdgeInsetsDirectional
+            //                                     .fromSTEB(
+            //                                         12.0, 0.0, 12.0, 0.0),
+            //                                 child: Column(
+            //                                   mainAxisSize: MainAxisSize.min,
+            //                                   mainAxisAlignment:
+            //                                       MainAxisAlignment.start,
+            //                                   crossAxisAlignment:
+            //                                       CrossAxisAlignment.start,
+            //                                   children: [
+            //                                     Text(
+            //                                       devicesItem.deviceName,
+            //                                       style: FlutterFlowTheme.of(
+            //                                               context)
+            //                                           .headlineSmall
+            //                                           .override(
+            //                                             fontFamily:
+            //                                                 'Work Sans',
+            //                                             fontSize: 18.0,
+            //                                           ),
+            //                                     ),
+            //                                     Text(
+            //                                       'User',
+            //                                       style: FlutterFlowTheme.of(
+            //                                               context)
+            //                                           .bodySmall
+            //                                           .override(
+            //                                             fontFamily:
+            //                                                 'Plus Jakarta Sans',
+            //                                             color:
+            //                                                 Color(0xFF4B39EF),
+            //                                             fontSize: 12.0,
+            //                                             fontWeight:
+            //                                                 FontWeight.w500,
+            //                                           ),
+            //                                     ),
+            //                                     Padding(
+            //                                       padding:
+            //                                           EdgeInsetsDirectional
+            //                                               .fromSTEB(0.0, 4.0,
+            //                                                   0.0, 0.0),
+            //                                       child: Text(
+            //                                         'Last Updated',
+            //                                         style: FlutterFlowTheme
+            //                                                 .of(context)
+            //                                             .labelMedium
+            //                                             .override(
+            //                                               fontFamily:
+            //                                                   'Plus Jakarta Sans',
+            //                                               color: Color(
+            //                                                   0xFF57636C),
+            //                                               fontSize: 12.0,
+            //                                               fontWeight:
+            //                                                   FontWeight.w500,
+            //                                             ),
+            //                                       ),
+            //                                     ),
+            //                                   ],
+            //                                 ),
+            //                               ),
+            //                             ),
+            //                             Icon(
+            //                               Icons.keyboard_arrow_right_rounded,
+            //                               color: Color(0xFF57636C),
+            //                               size: 24.0,
+            //                             ),
+            //                           ],
+            //                         ),
+            //                       ),
+            //                     ).animateOnPageLoad(animationsMap[
+            //                         'containerOnPageLoadAnimation']!),
+            //                   ),
+            //                 );
+            //               }),
+            //             ),
+            //           );
+            //         },
+            //       );
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),

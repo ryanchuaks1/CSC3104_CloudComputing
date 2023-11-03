@@ -448,7 +448,7 @@ class _SignUpWidgetState extends State<SignUpWidget> {
                                               context.pop();
                                             }
                                             context.pushNamed(
-                                              'Home',
+                                              'Login',
                                               extra: <String, dynamic>{
                                                 kTransitionInfoKey:
                                                     TransitionInfo(

@@ -1,4 +1,5 @@
 import 'package:grpc/grpc.dart';
+import 'package:locationation/core/models/device_new_model.dart';
 import 'package:logging/logging.dart';
 
 import 'constants/app_constants.dart';
@@ -67,7 +68,7 @@ class ApiService {
   }
 
   //get all data
-  Future<List<DeviceList>> getAllDevices() async {
+  Future<List<DeviceNew>> getAllDevices(String userId) async {
     try {
       final channel = ClientChannel(AppConstants.GRPC_URL,
           port: AppConstants.GRPC_PORT,
@@ -76,13 +77,13 @@ class ApiService {
 
       final client = DeviceClient(channel);
 
-      final response = await client.get_all_devices(Item());
+      final response = await client.get_all_devices(Item(userId: userId));
 
       await channel.shutdown();
-
+      print("Response");
+      print(response.items);
       return response.items
-          .map((item) => DeviceList.fromJson({
-                "_id": item.id,
+          .map((item) => DeviceNew.fromJson({
                 "userId": item.userId,
                 "deviceId": item.deviceId,
               }))

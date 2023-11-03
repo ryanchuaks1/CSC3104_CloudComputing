@@ -66,8 +66,10 @@ class Device(DeviceServicer):
         values = (request.userId,)
         self.cursor.execute(query, values)
         result = self.cursor.fetchall()
+        print(request.userId)
 
         items = [Item(deviceId=row[0], userId=row[1]) for row in result]
+        print(items)
         return Reply(result="True", message="Devices retrieved successfully", items=items)
 
     def create_account(self, request, context):
