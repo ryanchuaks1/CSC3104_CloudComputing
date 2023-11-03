@@ -47,12 +47,11 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
   //Device Currently for Testing
   Device curr_device = Device(
-    userId: "test_user", 
-    deviceId: "f1740855-6716-11ee-9b42-107b44", 
-    deviceName: "Testing_device", 
-    latitude: double.parse("10.0"), 
-    longitude: double.parse("20.0")
-    );
+      userId: "test_user",
+      deviceId: "f1740855-6716-11ee-9b42-107b44",
+      deviceName: "Testing_device",
+      latitude: double.parse("10.0"),
+      longitude: double.parse("20.0"));
 
   //Timer
   Timer? timer;
@@ -90,8 +89,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
     timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getAllDevices());
 
-    publishing_timer = Timer.periodic(Duration(seconds: 5), (Timer t) => publishDeviceLocation());
-    timer_2 = Timer.periodic(Duration(seconds: 10), (Timer t) => scanBLEDevices());
+    publishing_timer = Timer.periodic(
+        Duration(seconds: 5), (Timer t) => publishDeviceLocation());
+    timer_2 =
+        Timer.periodic(Duration(seconds: 10), (Timer t) => scanBLEDevices());
 
     // On page load action.
     // SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -126,7 +127,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     final _respond = await ApiService().publishCurrentLocation(curr_device);
     print("Success: ${_respond}");
   }
-  
+
   Future scanBLEDevices() async {
     ScanResult targetDevice;
     _scanResultsSubscription =
@@ -194,6 +195,9 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
     timer_2!.cancel();
     timer_2 = null;
+
+    publishing_timer!.cancel();
+    publishing_timer = null;
 
     _scanResultsSubscription.cancel();
   }
