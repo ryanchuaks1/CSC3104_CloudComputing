@@ -5,6 +5,7 @@ package kafka_consumer_grpc;
 // service definition
 service Kafka_Consumer_gRPC{
     rpc Subscribe (Subscribe_Data) returns (stream Location_Data) {}
+    rpc Export_Topics (Request) returns (Response) {}
 }
 
 // request message
@@ -16,4 +17,10 @@ message Location_Data{
     string udid = 1;
     string timestamp = 2;
     string location = 3;
+}
+
+message Request{}
+
+message Response{
+    bool success = 1;
 }

@@ -43,7 +43,7 @@ function Subscribe(call, callback){
             });
 
             const file_path = `${VOLUME_PATH}/${call.request.udid}.txt`;
-            const write_stream = fs.createWriteStream(file_path, { flags: 'a' , encoding: 'utf-8' });
+            //const write_stream = fs.createWriteStream(file_path, { flags: 'a' , encoding: 'utf-8' });
 
             await consumer.run({
                 eachMessage: async ({ topic, partition, message }) => {
@@ -53,11 +53,16 @@ function Subscribe(call, callback){
                         value: message.value.toString(),
                     });
 
-                    write_stream.write("timestamp: " + message.key.toString() + ", location: " + message.value.toString() + "\n");
+                    const data = {
+                        timestamp: message.key.toString(),
+                        location: message.value.toString()
+                    }
+
+                    //write_stream.write(JSON.stringify(data) + '\n');
 
                     count++;
                     if(count === 5){
-                        write_stream.end();
+                        //write_stream.end();
                         call.end();
                         await consumer.disconnect();
                         return;
@@ -78,9 +83,15 @@ function Subscribe(call, callback){
     //callback(null, {udid: call.request.udid, timestamp: 'timestamp', location: "12345"});
 }
 
+async function Export_Topics(call, callback){
+    const new_consumer = new kafka_consumer.Kafka_Consumer('export-topic-consumer', 'admin');
+    var res = await new_consumer.export_log(VOLUME_PATH);
+    callback(null, {success: res});
+}
+
 function main(){
     var server = new grpc.Server();
-    server.addService(kafka_consumer_proto.Kafka_Consumer_gRPC.service, {Subscribe: Subscribe});
+    server.addService(kafka_consumer_proto.Kafka_Consumer_gRPC.service, {Subscribe: Subscribe, Export_Topics: Export_Topics});
     server.bindAsync(SERVER_SOCKET, grpc.ServerCredentials.createInsecure(), () => {
         server.start();
     })
