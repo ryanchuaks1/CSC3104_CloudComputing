@@ -172,35 +172,3 @@ class ApiService {
     }
   }
 }
-
-// For Testing Purposes
-void main() async {
-  
-  print("Start Program...\n");
-
-  ApiService apiService = ApiService(); 
-
-  Device curr_device = Device(
-    userId: "test_user", 
-    deviceId: "f1740855-6716-11ee-9b42-107b44", 
-    deviceName: "Testing_device", 
-    latitude: double.parse("10.0"), 
-    longitude: double.parse("20.0"));
-
-  // Timer.periodic(Duration(seconds: 1), (timer) {
-  //   print("Publishing\n");
-  //   final reply = await apiService.publishCurrentLocation(curr_device);
-
-  //   print(reply.message);
-  // });
-
-  void publishLocation(Timer timer) async {
-    print("Publishing\n");
-    final reply = await apiService.publishCurrentLocation(curr_device);
-
-    print(reply.message);
-  }
-
-  Timer.periodic(Duration(seconds: 1), publishLocation);
-
-}
