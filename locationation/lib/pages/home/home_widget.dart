@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:locationation/backend/schema/util/extra.dart';
 import 'package:locationation/core/models/device_list_model.dart';
 import 'package:locationation/core/models/device_new_model.dart';
 import 'package:locationation/core/services/api_service.dart';
@@ -44,7 +46,14 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
   Timer? timer;
 
+  Timer? timer_2;
+
   List<DeviceNew> _devices = [];
+
+  String _value = "";
+
+  late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
+  late StreamSubscription<bool> _isScanningSubscription;
 
   final animationsMap = {
     'containerOnPageLoadAnimation': AnimationInfo(
@@ -68,6 +77,9 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     _model = createModel(context, () => HomeModel());
 
     timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getAllDevices());
+
+    timer_2 =
+        Timer.periodic(Duration(seconds: 10), (Timer t) => scanBLEDevices());
 
     // On page load action.
     // SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -94,6 +106,63 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     return _devices;
   }
 
+  Future scanBLEDevices() async {
+    ScanResult targetDevice;
+    _scanResultsSubscription =
+        FlutterBluePlus.scanResults.listen((results) async {
+      for (ScanResult r in results) {
+        if (r.advertisementData.localName == "mpy-uart") {
+          targetDevice = r;
+          targetDevice.device.connectionState
+              .listen((BluetoothConnectionState state) {
+            if (state == BluetoothConnectionState.disconnected) {}
+          });
+          try {
+            await targetDevice.device.connect();
+
+            await receiveData(targetDevice.device);
+            print(_value);
+          } catch (e) {}
+        }
+      }
+    });
+
+    // Start scanning
+    await FlutterBluePlus.startScan();
+
+    Future.delayed(const Duration(seconds: 5));
+
+    _scanResultsSubscription.cancel();
+  }
+
+  Future<String?> receiveData(BluetoothDevice device) async {
+    try {
+      List<BluetoothService> services = await device.discoverServices();
+      for (BluetoothService service in services) {
+        for (BluetoothCharacteristic characteristic
+            in service.characteristics) {
+          final isRead = characteristic.properties.read;
+          final isNotify = characteristic.properties.notify;
+
+          if (isRead && isNotify) {
+            final subscription =
+                characteristic.onValueReceived.listen((value) {});
+            device.cancelWhenDisconnected(subscription);
+            await characteristic.setNotifyValue(true);
+            final value = await characteristic.read();
+            await device.disconnect(timeout: 3);
+            _value = String.fromCharCodes(value);
+            return String.fromCharCodes(value);
+          }
+        }
+      }
+    } catch (e) {
+      return null;
+    }
+
+    return null;
+  }
+
   @override
   void dispose() {
     _model.dispose();
@@ -101,6 +170,11 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     super.dispose();
     timer!.cancel();
     timer = null;
+
+    timer_2!.cancel();
+    timer_2 = null;
+
+    _scanResultsSubscription.cancel();
   }
 
   @override
