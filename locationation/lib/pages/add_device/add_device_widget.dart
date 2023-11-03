@@ -165,7 +165,7 @@ class _AddDeviceWidgetState extends State<AddDeviceWidget> {
                                   fontSize: 22.0,
                                 ),
                           ),
-                        ),
+                        ),  
                       ],
                     ),
                   ),

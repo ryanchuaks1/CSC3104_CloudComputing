@@ -21,7 +21,7 @@ class ApiService {
 
   ApiService._init();
 
-   Future<Reply> publishCurrentLocation(Device device) async {
+  Future<Reply> publishCurrentLocation(Device device) async {
 
     try {
       final channel = ClientChannel(AppConstants.GRPC_URL,
@@ -40,7 +40,7 @@ class ApiService {
 
       await channel.shutdown();
       
-      return Reply()..result = response.result;
+      return Reply()..result = response.message;
     } catch (e) {
       log.warning(e.toString());
       return Reply()..result = e.toString();

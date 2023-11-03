@@ -46,7 +46,7 @@ class Device(DeviceServicer):
         try:
             location_data = {
                 'latitude' : request.latitude , 
-                'longtitude' : request.longtitude
+                'longitude' : request.longitude
             }
 
             # Add a new topic for this device
@@ -54,7 +54,7 @@ class Device(DeviceServicer):
             print(f"Added New Topic: {added_topic}")
 
             serialize_location_data = json.dumps(location_data)
-            published = self._producer.publishLocationToKafka(deviceID=request.deviceId, location=location_data)
+            published = self._producer.publishLocationToKafka(deviceID=request.deviceId, location=serialize_location_data)
             print(f"Location Published: {published}")
             return Reply(result="True", message="Location successfully Published")
         
@@ -74,6 +74,10 @@ class Device(DeviceServicer):
             insert_values = (request.userId, "user_name_example", "user_password_hash_example")
             self.cursor.execute(insert_query, insert_values)
             self.connection.commit()
+
+        # Add a new topic for this device
+            added_topic = self._producer.addNewTopic(request.deviceId)
+            print(f"Added New Topic: {added_topic}")
 
         # Insert the new device into the devices table
         device_query = "INSERT INTO devices (device_id, user_id) VALUES (%s, %s)"

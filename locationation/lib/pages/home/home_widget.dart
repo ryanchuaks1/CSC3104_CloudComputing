@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:locationation/core/models/device_list_model.dart';
+import 'package:locationation/core/models/device_model.dart';
 import 'package:locationation/core/models/device_new_model.dart';
 import 'package:locationation/core/services/api_service.dart';
 
@@ -42,7 +43,18 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
+  //Device Currently for Testing
+  Device curr_device = Device(
+    userId: "test_user", 
+    deviceId: "f1740855-6716-11ee-9b42-107b44", 
+    deviceName: "Testing_device", 
+    latitude: double.parse("10.0"), 
+    longitude: double.parse("20.0")
+    );
+
+  //Timer
   Timer? timer;
+  Timer? publishing_timer;
 
   List<DeviceNew> _devices = [];
 
@@ -69,6 +81,8 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
     timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getAllDevices());
 
+    publishing_timer = Timer.periodic(Duration(seconds: 5), (Timer t) => publishDeviceLocation());
+
     // On page load action.
     // SchedulerBinding.instance.addPostFrameCallback((_) async {
     //   _model.foundDevices = await actions.findDevices();
@@ -92,6 +106,15 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     print(_devices.length);
     setState(() {});
     return _devices;
+  }
+
+  Future<void> publishDeviceLocation() async {
+    print("DEV MSG: Publishing Device Location");
+
+    //TODO: Device ID will be replaces with a getThisDevice Function
+
+    final _respond = await ApiService().publishCurrentLocation(curr_device);
+    print("Success: ${_respond}");
   }
 
   @override
