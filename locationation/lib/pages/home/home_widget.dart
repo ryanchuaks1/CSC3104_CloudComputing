@@ -1,10 +1,12 @@
 import '/backend/api_requests/api_calls.dart';
+import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_google_map.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/custom_code/actions/index.dart' as actions;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -18,10 +20,12 @@ class HomeWidget extends StatefulWidget {
   const HomeWidget({
     Key? key,
     bool? isScrolling,
+    required this.current_user,
   })  : this.isScrolling = isScrolling ?? true,
         super(key: key);
 
   final bool isScrolling;
+  final String current_user;
 
   @override
   _HomeWidgetState createState() => _HomeWidgetState();
@@ -50,7 +54,17 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    print(widget.current_user);
     _model = createModel(context, () => HomeModel());
+
+    // On page load action.
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      _model.foundDevices = await actions.findDevices();
+      setState(() {
+        _model.scannedDevices =
+            _model.foundDevices!.toList().cast<BTDeviceStruct>();
+      });
+    });
 
     setupAnimations(
       animationsMap.values.where((anim) =>
@@ -189,6 +203,9 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                         false,
                                         ParamType.bool,
                                       ),
+                                      'current_user': serializeParam(
+                                          widget.current_user,
+                                          ParamType.String),
                                     }.withoutNulls,
                                   );
                                 },
@@ -254,10 +271,16 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                     final columnGetAllDevicesResponse = snapshot.data!;
                     return Builder(
                       builder: (context) {
-                        final devices = getJsonField(
-                          columnGetAllDevicesResponse.jsonBody,
-                          r'''$.deviceList''',
-                        ).toList();
+                        final devices = [];
+                        try {
+                          final devices = getJsonField(
+                            columnGetAllDevicesResponse.jsonBody,
+                            r'''$.deviceList''',
+                          ).toList();
+                        } catch (e) {
+                          final devices = [];
+                        }
+
                         return SingleChildScrollView(
                           child: Column(
                             mainAxisSize: MainAxisSize.max,
