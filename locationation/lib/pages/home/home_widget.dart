@@ -56,8 +56,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   //Timer
   Timer? timer;
   Timer? publishing_timer;
-
   Timer? timer_2;
+
+  //Device ID
+  String? _deviceId;
 
   List<DeviceNew> _devices = [];
 
@@ -93,6 +95,13 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
         Duration(seconds: 5), (Timer t) => publishDeviceLocation());
     timer_2 =
         Timer.periodic(Duration(seconds: 10), (Timer t) => scanBLEDevices());
+
+    ApiService().getDeviceId().then((value) {
+      setState(() {
+        _deviceId = value;
+        print('Device ID: $value'); 
+      });
+    });
 
     // On page load action.
     // SchedulerBinding.instance.addPostFrameCallback((_) async {

@@ -10,6 +10,9 @@ import '../models/device_model.dart';
 import '../models/user_model.dart';
 import 'package:locationation/core/services/device.pbgrpc.dart'; // Import your generated gRPC file
 
+import 'package:unique_identifier/unique_identifier.dart';
+import 'dart:io';
+
 final log = Logger('ApiLogger');
 
 class ApiService {
@@ -172,4 +175,11 @@ class ApiService {
       return UserInstance()..result = e.toString();
     }
   }
+
+  Future<String?> getDeviceId() async {
+    // ? means can be nullable  
+    String? deviceId = await UniqueIdentifier.serial;
+    return deviceId;
+  }
+
 }
