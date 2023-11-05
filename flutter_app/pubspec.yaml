@@ -15,6 +15,7 @@ dependencies:
   logging: ^1.2.0
   http: ^1.0.0
   uuid: ^4.0.0
+  flutter_svg: any
   google_maps_flutter: ^2.5.0
   location: ^5.0.0
   flutter:
@@ -23,6 +24,9 @@ dependencies:
     sdk: flutter
   grpc: ^3.2.4
   protobuf: ^3.1.0 # For Proto Files (pb files)
+  flutter_blue_plus: ^1.20.8
+  permission_handler: ^11.0.1
+  get: ^4.6.5
 
 
 dev_dependencies:
@@ -40,3 +44,4 @@ flutter:
   assets:
     # Add assets from the images directory to the application.
     - assets/images/
+    - assets/icons/

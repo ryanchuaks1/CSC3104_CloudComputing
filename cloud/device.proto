@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package device;
+
+// For Compilation
+// Run in Current Directory : python -m grpc_tools.protoc -I. --python_out=. --pyi_out=. --grpc_python_out=. ./device.proto
+
+// Device definition
+service Device {
+  rpc publish_current_location (Item) returns (Reply) {}
+  rpc add_new_device (Item) returns (Reply) {}
+  rpc delete_device (Item) returns (Reply) {}
+  rpc get_all_devices (Item) returns (Reply) {}
+  rpc create_account (UserAccount) returns (Reply) {}
+  rpc login (UserAccount) returns (UserInstance) {}
+}
+
+// Item message
+message Item {
+  string _id = 1;
+  string userId = 2;
+  string deviceId = 3;
+  string deviceName = 4;
+  string latitude = 5;
+  string longitude = 6;
+}
+
+message UserAccount {
+  string userName = 1;
+  string userPasswordHash = 2;
+}
+
+message UserInstance {
+  string result = 1;
+  string userId = 2;
+  string userName = 3;
+}
+
+message Reply {
+  string result = 1;
+  string message = 2;
+  repeated Item items = 3;
+}

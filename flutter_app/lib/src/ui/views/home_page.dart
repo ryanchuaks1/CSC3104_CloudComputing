@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_app/src/ui/views/utils/extra.dart';
+import 'package:flutter_app/src/ui/views/utils/snackbar.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:uuid/uuid.dart';
-import 'package:flutter_app/src/core/constants/message_constants.dart';
+import 'package:flutter_app/src/core/constants/app_constants.dart';
 import 'package:flutter_app/src/ui/common/show_toast_message.dart';
 
 import '../../core/models/device_list_model.dart';
@@ -11,26 +16,99 @@ import '../widgets/default_custom_button.dart';
 import '../widgets/google_map_widget.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({Key? key, required this.userId}) : super(key: key);
+
+  final String userId;
 
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  List<BluetoothDevice> _connectedDevices = [];
+  List<ScanResult> _scanResults = [];
+  bool _isScanning = true;
+  late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
+  late StreamSubscription<bool> _isScanningSubscription;
+  String _value = "";
+  late StreamSubscription<List<int>> _lastValueSubscription;
+
   late final _deviceIdController;
   List<DeviceList> _deviceList = [];
   String _id = "";
+
+  Timer? timer;
 
   @override
   void initState() {
     super.initState();
     _deviceIdController = TextEditingController();
+
+    timer =
+        Timer.periodic(Duration(seconds: 30), (Timer t) => scanBLEDevices());
+  }
+
+  Future scanBLEDevices() async {
+// Setup Listener for scan results.
+// device not found? see "Common Problems" in the README
+    var subscription = FlutterBluePlus.scanResults.listen(
+      (results) async {
+        for (ScanResult r in results) {
+          if (r.advertisementData.localName == "mpy-uart") {
+            ScanResult targetDevice;
+            targetDevice = r;
+            targetDevice.device.connectionState
+                .listen((BluetoothConnectionState state) async {
+              if (state == BluetoothConnectionState.disconnected) {
+                // 1. typically, start a periodic timer that tries to
+                //    periodically reconnect, or just call connect() again right now
+                // 2. you must always re-discover services after disconnection!
+              }
+            });
+            await targetDevice.device.connect();
+
+            targetDevice.device.connectAndUpdateStream().catchError((e) {
+              Snackbar.show(ABC.c, prettyException("Connect Error:", e),
+                  success: false);
+            });
+            await receiveData(targetDevice.device);
+            print(_value);
+          }
+        }
+      },
+    );
+
+    // Start scanning
+    await FlutterBluePlus.startScan(timeout: Duration(seconds: 5));
+  }
+
+  Future<String?> receiveData(BluetoothDevice device) async {
+    final services = await device.discoverServices();
+    for (BluetoothService service in services) {
+      for (BluetoothCharacteristic characteristic in service.characteristics) {
+        final isRead = characteristic.properties.read;
+        final isNotify = characteristic.properties.notify;
+        if (isRead && isNotify) {
+          final subscription =
+              characteristic.onValueReceived.listen((value) {});
+          device.cancelWhenDisconnected(subscription);
+          await characteristic.setNotifyValue(true);
+          final value = await characteristic.read();
+          device.disconnect(timeout: 3);
+          _value = String.fromCharCodes(value);
+          return String.fromCharCodes(value);
+        }
+      }
+    }
+    return null;
   }
 
   @override
   void dispose() {
     _deviceIdController.dispose();
+    timer?.cancel();
+    _scanResultsSubscription.cancel();
+    _isScanningSubscription.cancel();
     super.dispose();
   }
 
@@ -138,37 +216,35 @@ class _HomePageState extends State<HomePage> {
               if (data.result == true) {
                 setState(() {
                   _deviceIdController.clear();
-                  ShowToastMessage.showCenterShortToast(
-                      MessageConstants.BASARILI);
+                  ShowToastMessage.showCenterShortToast("SUCCESS");
                 });
               } else {
-                ShowToastMessage.showCenterShortToast(MessageConstants.HATA);
+                ShowToastMessage.showCenterShortToast("ERROR");
               }
             });
           },
         ),
       );
 
-  Widget get updateDeviceButton => DefaultRaisedButton(
-        height: 55,
-        label: 'Update',
-        color: Colors.cyanAccent,
-        onPressed: () async {
-          await ApiService()
-              .updateDevice(_deviceIdController.text, _id)
-              .then((data) {
-            if (data.result == true) {
-              setState(() {
-                _deviceIdController.clear();
-                ShowToastMessage.showCenterShortToast(
-                    MessageConstants.BASARILI);
-              });
-            } else {
-              ShowToastMessage.showCenterShortToast(MessageConstants.HATA);
-            }
-          });
-        },
-      );
+  // Widget get updateDeviceButton => DefaultRaisedButton(
+  //       height: 55,
+  //       label: 'Update',
+  //       color: Colors.cyanAccent,
+  //       onPressed: () async {
+  //         await ApiService()
+  //             .updateDevice(_deviceIdController.text, _id)
+  //             .then((data) {
+  //           if (data.result == true) {
+  //             setState(() {
+  //               _deviceIdController.clear();
+  //               ShowToastMessage.showCenterShortToast("SUCCESS");
+  //             });
+  //           } else {
+  //             ShowToastMessage.showCenterShortToast("ERROR");
+  //           }
+  //         });
+  //       },
+  //     );
 }
 
 class DevicePanel extends StatelessWidget {
@@ -188,7 +264,7 @@ class ErrorOccurred extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: const Text(MessageConstants.ERROR_OCCURED),
+      child: const Text("Try to load data again"),
     );
   }
 }
@@ -207,7 +283,7 @@ class NoSavedData extends StatelessWidget {
         ),
         SizedBox(height: 10),
         Text(
-          MessageConstants.NO_SAVED_DATA,
+          "NO SAVED DATA",
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 24,
@@ -251,19 +327,20 @@ Future<void> _showAddDeviceDialog(
             onPressed: () async {
               await ApiService()
                   .addNewDevice(Device(
+                      userId: "testing",
                       deviceId: uuid.v4(),
                       deviceName: _deviceNameController.text,
                       latitude: 0,
                       longitude: 0))
                   .then((data) {
-                if (data.result == true) {
+                if (data.result == "True") {
                   _deviceNameController.clear();
-                  ShowToastMessage.showCenterShortToast(
-                      MessageConstants.BASARILI);
+                  ShowToastMessage.showCenterShortToast("SUCCESS");
                   Navigator.of(context).pop(); // DRY?
                   onDialogDismissed(); // DRY?
                 } else {
-                  ShowToastMessage.showCenterShortToast(MessageConstants.HATA);
+                  print(data.result);
+                  ShowToastMessage.showCenterShortToast(data.result);
                   Navigator.of(context).pop(); // DRY?
                   onDialogDismissed(); // DRY?
                 }
