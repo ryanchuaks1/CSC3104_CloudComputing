@@ -123,9 +123,6 @@ class KafkaConsumerHandler
         // Process the received message as needed
         // print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_message.location}');
 
-        await Future.delayed(Duration(milliseconds: 100)); // Introduce a 100ms delay
-
-
         //print("Getting Location!");
         message_count += 1;
         //Put the Location into the buffer
