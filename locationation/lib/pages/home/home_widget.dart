@@ -6,6 +6,7 @@ import 'package:locationation/core/models/device_list_model.dart';
 import 'package:locationation/core/models/device_model.dart';
 import 'package:locationation/core/models/device_new_model.dart';
 import 'package:locationation/core/services/api_service.dart';
+import 'package:locationation/core/services/consumer/kafka_consumer_handler.dart';
 
 import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/structs/index.dart';
@@ -45,23 +46,17 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  //Device Currently for Testing
-  Device curr_device = Device(
-      userId: "test_user",
-      deviceId: "f1740855-6716-11ee-9b42-107b44",
-      deviceName: "Testing_device",
-      latitude: double.parse("10.0"),
-      longitude: double.parse("20.0"));
-
   //Timer
   Timer? timer;
   Timer? publishing_timer;
   Timer? timer_2;
+  Timer? get_location_timer;
 
   //Device ID
   String? _thisDeviceID;
 
   List<DeviceNew> _devices = [];
+  Map<String, KafkaConsumerHandler> _deviceSubcribers = {};
 
   String _value = "";
 
@@ -90,9 +85,6 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     _model = createModel(context, () => HomeModel());
 
     timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getAllDevices());
-
-    publishing_timer = Timer.periodic(
-        Duration(seconds: 5), (Timer t) => publishDeviceLocation());
     timer_2 =
         Timer.periodic(Duration(seconds: 10), (Timer t) => scanBLEDevices());
 
@@ -108,23 +100,9 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
           userId: widget.current_user, 
           deviceId: curr_device_id, 
           deviceName: widget.current_user + "'s Device", 
-          latitude: 0.0, 
-          longitude: 0.0);
-
+          latitude: double.parse("10.0"),
+          longitude: double.parse("20.0"));
           ApiService().addNewDevice(newdevice);
-
-
-          //Testing Code - To be Deleted
-          Device tempdevice = Device(
-          userId: widget.current_user, 
-          deviceId: "tempdeviceID", 
-          deviceName: widget.current_user + "'s Device", 
-          latitude: 0.0, 
-          longitude: 0.0);
-
-          ApiService().addNewDevice(tempdevice);
-          //END OF TESTING CODE
-
 
         }
         else
@@ -133,6 +111,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
         }
       });
     });
+
+    publishing_timer = Timer.periodic(Duration(seconds: 5), (Timer t) => publishDeviceLocation());
+
+    get_location_timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getUpdatedDeviceLocations());
 
     // On page load action.
     // SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -151,6 +133,8 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     );
   }
 
+  static int curr_device_list_length = 0;
+
   Future<List<DeviceNew>> getAllDevices() async {
     print("Test");
 
@@ -161,19 +145,83 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     // Hence, when there is nothing in the list, dotn update
     if(curr_device_data_list.length != 0){
       _devices = curr_device_data_list;
+
+      //Check if there are new subscribers by comparing old and new length
+      if (_devices.length != curr_device_list_length) {
+        //If there is a difference, resubscribe
+        subscribeToAllDevices();
+        curr_device_list_length = _devices.length;
+      } 
     }
     
     setState(() {});
     return _devices;
   }
 
+  //Publishing Location Working
   Future<void> publishDeviceLocation() async {
     print("DEV MSG: Publishing Device Location");
 
     //TODO: Device ID will be replaces with a getThisDevice Function
 
+    Device curr_device = Device(
+      userId: "test_user",
+      deviceId: _thisDeviceID ?? "",
+      deviceName: "Testing_device",
+      latitude: double.parse("10.0"),
+      longitude: double.parse("20.0"));
+
+    if(curr_device.deviceId == ""){print("ERROR GETTING DEVICE ID");}
+
+    print("DEVICE TO PUBLISH: ${curr_device.deviceId}");
     final _respond = await ApiService().publishCurrentLocation(curr_device);
     print("Success: ${_respond}");
+  }
+
+  //Subscribe to all the devices in the _devices list
+  Future<void> subscribeToAllDevices() async
+  {
+    try {
+
+      for(DeviceNew curr_device in _devices)
+      {
+        //Initailise Subscription and Assign to each device
+        KafkaConsumerHandler curr_handler = KafkaConsumerHandler();
+        curr_handler.subscribeToDevice(curr_device.deviceId);
+
+        print("SUB: ObjectID for ${curr_device.deviceId} : ${curr_handler.objectId}");
+        print("DEVICE TO SUBSCRIBE: ${curr_handler.temp_device_id}");
+        print("Subscribed to ${curr_device.deviceId}");
+
+        //Add a list to reference each device later
+        _deviceSubcribers[curr_device.deviceId] = curr_handler;
+      }
+
+    } catch (e) {print(e.toString());}
+  }
+
+  //Get all teh Updated Device Locations
+  Future<void> getUpdatedDeviceLocations() async 
+  {
+    for (String curr_device_id in _deviceSubcribers.keys) 
+    {
+      KafkaConsumerHandler? curr_handler = _deviceSubcribers[curr_device_id];
+      
+      if (curr_handler == null) {
+        //If there is a null handler, resubscribe
+        subscribeToAllDevices();
+        return;
+      }
+      else
+      {
+        print("GET: ObjectID for ${curr_device_id}: ${curr_handler.objectId}");
+        print("COUNT: for ${curr_device_id}: ${curr_handler.message_count}");
+        //print("Buffer: ${curr_handler.buffer}");
+        //TODO: Currently only print, need to pass the location
+        String curr_location_data = await curr_handler.getCurrentLocation();
+        print("LOCATION DATA: " + curr_location_data);
+      }
+    }
   }
 
   Future scanBLEDevices() async {
