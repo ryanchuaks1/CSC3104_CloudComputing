@@ -65,24 +65,29 @@ class Kafka_Consumer{
         return success;
     }
 
-    async subscribe_and_listen(udid){
+    async subscribe_and_listen(udid, callback){
         var success = true;
         try{
             await this._consumer.connect();
             await this._consumer.subscribe({
                 topic: udid,
-                fromBeginning: true
+                fromBeginning: true,
             });
     
             await this._consumer.run({
                 eachMessage: async({ topic, partition, message }) => {
-                    const data = {
+                    // const data = {
+                    //     timestamp: message.key.toString(),
+                    //     location: message.value.toString()
+                    // }
+
+                    // console.log(data);
+
+                    callback({
+                        udid: topic,
                         timestamp: message.key.toString(),
                         location: message.value.toString()
-                    }
-
-                    console.log(data);
-                    //this.return_location(topic, partition, message);
+                    });
 
                     // count++;
                     // if(count === 5){
@@ -101,14 +106,6 @@ class Kafka_Consumer{
         return success;
 
     }
-
-    // return_location(topic, partition, message){
-    //     this._grpc_call.write({udid: this._grpc_call.request.udid, timestamp: message.key.toString(), location: message.value.toString()});
-    //     console.log({
-    //         key: message.key.toString(),
-    //         value: message.value.toString(),
-    //     });
-    // }
 }
 
 module.exports = { Kafka_Consumer };

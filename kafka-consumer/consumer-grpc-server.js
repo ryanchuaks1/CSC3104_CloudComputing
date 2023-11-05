@@ -20,67 +20,16 @@ var packageDefinition = protoLoader.loadSync(
 
 var kafka_consumer_proto = grpc.loadPackageDefinition(packageDefinition).kafka_consumer_grpc;
 
-function Subscribe(call, callback){
-    // const new_consumer = new kafka_consumer.Kafka_Consumer(call.request.udid, 'kafka-client', 'user_1', call);
-    // new_consumer.subscribe_and_listen().catch(console.error);
-    var count = 0;
-
-    const { Kafka } = require('kafkajs');
-    const kafka = new Kafka({
-        clientId: 'kafka-client',
-        brokers: ['kafka:9092'],
-    });
-    const consumer = kafka.consumer({
-        groupId: 'user_1'
-    });
-
-    async function run(){
-        try{
-            await consumer.connect();
-            await consumer.subscribe({
-                topic: call.request.udid,
-                fromBeginning: true
-            });
-
-            const file_path = `${VOLUME_PATH}/${call.request.udid}.txt`;
-            //const write_stream = fs.createWriteStream(file_path, { flags: 'a' , encoding: 'utf-8' });
-
-            await consumer.run({
-                eachMessage: async ({ topic, partition, message }) => {
-                    call.write({udid: call.request.udid, timestamp: message.key.toString(), location: message.value.toString()});
-                    console.log({
-                        key: message.key.toString(),
-                        value: message.value.toString(),
-                    });
-
-                    const data = {
-                        timestamp: message.key.toString(),
-                        location: message.value.toString()
-                    }
-
-                    //write_stream.write(JSON.stringify(data) + '\n');
-
-                    count++;
-                    if(count === 5){
-                        //write_stream.end();
-                        call.end();
-                        await consumer.disconnect();
-                        return;
-                    }
-                },
-            });
-
-            // var new_consumer = new kafka_consumer.Kafka_Consumer('kafka-client-2', 'user_1');
-            // await new_consumer.export_log(VOLUME_PATH);
-        }
-        catch(error){
-            console.error("Error from run(): " + error.message);
-            await consumer.disconnect();
-        }
-    }
-
-    run().catch(console.error);
-    //callback(null, {udid: call.request.udid, timestamp: 'timestamp', location: "12345"});
+async function Subscribe(call, callback){
+    const new_consumer = new kafka_consumer.Kafka_Consumer(call.request.session_id, call.request.session_id);
+    await new_consumer.subscribe_and_listen(call.request.udid, ({ udid, timestamp, location }) => {
+        call.write({udid: udid, timestamp: timestamp, location: location});
+        console.log({
+            udid: udid,
+            timestamp: timestamp,
+            location: location
+        })
+    })
 }
 
 async function Export_Topics(call, callback){

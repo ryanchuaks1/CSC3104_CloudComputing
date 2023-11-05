@@ -42,7 +42,6 @@ async function Add_New_Topic(call, callback){
 
 async function Load_Topics(call, callback){
     const new_producer = new kafka_producer.Kafka_Producer('load-topic-producer');
-    console.log("hello");
     var res = await new_producer.load_topics(VOLUME_PATH);
     callback(null, {udid: null, success: res});
 }
