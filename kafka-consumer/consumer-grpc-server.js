@@ -21,7 +21,7 @@ var packageDefinition = protoLoader.loadSync(
 var kafka_consumer_proto = grpc.loadPackageDefinition(packageDefinition).kafka_consumer_grpc;
 
 async function Subscribe(call, callback){
-    const new_consumer = new kafka_consumer.Kafka_Consumer(call.request.session_id, call.request.session_id);
+    const new_consumer = new kafka_consumer.Kafka_Consumer(call.request.sid, call.request.sid);
     await new_consumer.subscribe_and_listen(call.request.udid, ({ udid, timestamp, location }) => {
         call.write({udid: udid, timestamp: timestamp, location: location});
         console.log({

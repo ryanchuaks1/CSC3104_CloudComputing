@@ -29,6 +29,10 @@ class Kafka_Producer_gRPCClient extends $grpc.Client {
       '/kafka_producer_grpc.Kafka_Producer_gRPC/Add_New_Topic',
       ($0.Topic value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.Response.fromBuffer(value));
+  static final _$load_Topics = $grpc.ClientMethod<$0.Request, $0.Response>(
+      '/kafka_producer_grpc.Kafka_Producer_gRPC/Load_Topics',
+      ($0.Request value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.Response.fromBuffer(value));
 
   Kafka_Producer_gRPCClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
@@ -42,6 +46,10 @@ class Kafka_Producer_gRPCClient extends $grpc.Client {
 
   $grpc.ResponseFuture<$0.Response> add_New_Topic($0.Topic request, {$grpc.CallOptions? options}) {
     return $createUnaryCall(_$add_New_Topic, request, options: options);
+  }
+
+  $grpc.ResponseFuture<$0.Response> load_Topics($0.Request request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$load_Topics, request, options: options);
   }
 }
 
@@ -64,6 +72,13 @@ abstract class Kafka_Producer_gRPCServiceBase extends $grpc.Service {
         false,
         ($core.List<$core.int> value) => $0.Topic.fromBuffer(value),
         ($0.Response value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.Request, $0.Response>(
+        'Load_Topics',
+        load_Topics_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.Request.fromBuffer(value),
+        ($0.Response value) => value.writeToBuffer()));
   }
 
   $async.Future<$0.Response> add_New_Location_Pre($grpc.ServiceCall call, $async.Future<$0.Location> request) async {
@@ -74,6 +89,11 @@ abstract class Kafka_Producer_gRPCServiceBase extends $grpc.Service {
     return add_New_Topic(call, await request);
   }
 
+  $async.Future<$0.Response> load_Topics_Pre($grpc.ServiceCall call, $async.Future<$0.Request> request) async {
+    return load_Topics(call, await request);
+  }
+
   $async.Future<$0.Response> add_New_Location($grpc.ServiceCall call, $0.Location request);
   $async.Future<$0.Response> add_New_Topic($grpc.ServiceCall call, $0.Topic request);
+  $async.Future<$0.Response> load_Topics($grpc.ServiceCall call, $0.Request request);
 }

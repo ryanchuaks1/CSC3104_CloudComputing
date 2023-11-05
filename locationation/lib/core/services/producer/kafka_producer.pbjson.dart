@@ -39,6 +39,15 @@ final $typed_data.Uint8List locationDescriptor = $convert.base64Decode(
     'CghMb2NhdGlvbhISCgR1ZGlkGAEgASgJUgR1ZGlkEhoKCGxvY2F0aW9uGAIgASgJUghsb2NhdG'
     'lvbg==');
 
+@$core.Deprecated('Use requestDescriptor instead')
+const Request$json = {
+  '1': 'Request',
+};
+
+/// Descriptor for `Request`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List requestDescriptor = $convert.base64Decode(
+    'CgdSZXF1ZXN0');
+
 @$core.Deprecated('Use responseDescriptor instead')
 const Response$json = {
   '1': 'Response',

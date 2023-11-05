@@ -18,6 +18,10 @@ class Location(_message.Message):
     location: str
     def __init__(self, udid: _Optional[str] = ..., location: _Optional[str] = ...) -> None: ...
 
+class Request(_message.Message):
+    __slots__ = []
+    def __init__(self) -> None: ...
+
 class Response(_message.Message):
     __slots__ = ["udid", "success"]
     UDID_FIELD_NUMBER: _ClassVar[int]
