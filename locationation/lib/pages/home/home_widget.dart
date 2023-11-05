@@ -59,7 +59,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   Timer? timer_2;
 
   //Device ID
-  String? _deviceId;
+  String? _thisDeviceID;
 
   List<DeviceNew> _devices = [];
 
@@ -98,8 +98,39 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
     ApiService().getDeviceId().then((value) {
       setState(() {
-        _deviceId = value;
+        _thisDeviceID = value;
         print('Device ID: $value'); 
+
+        String curr_device_id = value ?? "";
+        if (curr_device_id != "") {
+
+          Device newdevice = Device(
+          userId: widget.current_user, 
+          deviceId: curr_device_id, 
+          deviceName: widget.current_user + "'s Device", 
+          latitude: 0.0, 
+          longitude: 0.0);
+
+          ApiService().addNewDevice(newdevice);
+
+
+          //Testing Code - To be Deleted
+          Device tempdevice = Device(
+          userId: widget.current_user, 
+          deviceId: "tempdeviceID", 
+          deviceName: widget.current_user + "'s Device", 
+          latitude: 0.0, 
+          longitude: 0.0);
+
+          ApiService().addNewDevice(tempdevice);
+          //END OF TESTING CODE
+
+
+        }
+        else
+        {
+          print("Fail to add current Device");
+        }
       });
     });
 
@@ -122,8 +153,16 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
   Future<List<DeviceNew>> getAllDevices() async {
     print("Test");
-    _devices = await ApiService().getAllDevices(widget.current_user);
-    print(_devices.length);
+
+    List<DeviceNew> curr_device_data_list = await ApiService().getAllDevices(widget.current_user);
+    print(curr_device_data_list.length);
+
+    // gRPC can be unreliable at time result in an empty list from the buffer
+    // Hence, when there is nothing in the list, dotn update
+    if(curr_device_data_list.length != 0){
+      _devices = curr_device_data_list;
+    }
+    
     setState(() {});
     return _devices;
   }
@@ -417,7 +456,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            devicesItem.deviceId,
+                                            (_thisDeviceID == devicesItem.deviceId) ? "Current Device" : "Another Device",
                                             style: FlutterFlowTheme.of(context)
                                                 .headlineSmall
                                                 .override(
@@ -426,7 +465,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                                 ),
                                           ),
                                           Text(
-                                            'User',
+                                            'Device ID: ' + devicesItem.deviceId,
                                             style: FlutterFlowTheme.of(context)
                                                 .bodySmall
                                                 .override(
