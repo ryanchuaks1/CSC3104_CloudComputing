@@ -2,8 +2,12 @@ syntax = "proto3";
 
 package device;
 
+// For Compilation
+// Run in Current Directory : protoc --dart_out=grpc:. -I. device.proto
+
 // Device definition
 service Device {
+  rpc publish_current_location (Item) returns (Reply) {}
   rpc add_new_device (Item) returns (Reply) {}
   rpc delete_device (Item) returns (Reply) {}
   rpc get_all_devices (Item) returns (Reply) {}

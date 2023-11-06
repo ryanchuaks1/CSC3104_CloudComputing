@@ -11,32 +11,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 Future<List<BTDeviceStruct>> findDevices() async {
-  final flutterBlue = FlutterBluePlus.instance;
   List<BTDeviceStruct> devices = [];
-  flutterBlue.scanResults.listen((results) {
-    List<ScanResult> scannedDevices = [];
+  var subscription = FlutterBluePlus.scanResults.listen((results) {
     for (ScanResult r in results) {
-      if (r.device.name.isNotEmpty) {
-        scannedDevices.add(r);
+      if (devices.contains(r.device.remoteId) == false) {
+        devices.add(BTDeviceStruct(
+            id: r.device.remoteId.toString(),
+            name: r.advertisementData.localName,
+            rssi: r.rssi));
       }
     }
-    scannedDevices.sort((a, b) => b.rssi.compareTo(a.rssi));
-    devices.clear();
-    scannedDevices.forEach((deviceResult) {
-      devices.add(BTDeviceStruct(
-        name: deviceResult.device.name,
-        id: deviceResult.device.id.toString(),
-        rssi: deviceResult.rssi,
-      ));
-    });
   });
-  final isScanning = flutterBlue.isScanningNow;
-  if (!isScanning) {
-    await flutterBlue.startScan(
-      timeout: const Duration(seconds: 5),
-    );
-  }
 
+  await FlutterBluePlus.startScan(timeout: const Duration(seconds: 5));
+  print(devices);
   return devices;
 }
 // Set your action name, define your arguments and return parameter,

@@ -1,2 +1,2 @@
-docker-compose --profile=all down
+docker-compose down
 docker volume prune -f
