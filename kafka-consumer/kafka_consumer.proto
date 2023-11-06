@@ -10,7 +10,7 @@ service Kafka_Consumer_gRPC{
 
 // request message
 message Subscribe_Data{
-    string session_id = 1;
+    string sid = 1;
     string udid = 2; // this is a field number, starts from 1
 }
 
