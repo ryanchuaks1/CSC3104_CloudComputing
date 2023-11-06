@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 Future<int> getRssi(BTDeviceStruct deviceInfo) async {
-  final device = BluetoothDevice.fromId(deviceInfo.id, name: deviceInfo.name);
+  final device = BluetoothDevice.fromId(deviceInfo.id);
   return await device.readRssi();
 }
 // Set your action name, define your arguments and return parameter,

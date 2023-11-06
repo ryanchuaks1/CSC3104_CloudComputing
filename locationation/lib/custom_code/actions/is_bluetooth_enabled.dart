@@ -8,16 +8,29 @@ import 'package:flutter/material.dart';
 // Begin custom action code
 // DO NOT REMOVE OR MODIFY THE CODE ABOVE!
 
+import 'dart:io';
+
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 Future<bool> isBluetoothEnabled() async {
-  await FlutterBluePlus.instance.isOn;
-  await Future.delayed(Duration(milliseconds: 100));
-  final state = await FlutterBluePlus.instance.state.first;
-  if (state == BluetoothState.on) {
-    return true;
+  bool result = false;
+  if (await FlutterBluePlus.isSupported == false) {
+    print("Bluetooth not suppored by this device.");
+    result = false;
+    return result;
   }
-  return false;
+
+  FlutterBluePlus.adapterState.listen((state) {
+    if (state != BluetoothAdapterState.on) {
+      result = false;
+    }
+  });
+
+  if (Platform.isAndroid) {
+    await FlutterBluePlus.turnOn();
+    result = true;
+  }
+  return result;
 }
 // Set your action name, define your arguments and return parameter,
 // and then add the boilerplate code using the green button on the right!

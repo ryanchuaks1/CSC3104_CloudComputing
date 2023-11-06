@@ -62,6 +62,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           path: '/home',
           builder: (context, params) => HomeWidget(
             isScrolling: params.getParam('isScrolling', ParamType.bool),
+            current_user: params.getParam('current_user', ParamType.String),
           ),
         ),
         FFRoute(
@@ -69,6 +70,7 @@ GoRouter createRouter(AppStateNotifier appStateNotifier) => GoRouter(
           path: '/addDevice',
           builder: (context, params) => AddDeviceWidget(
             isBTEnabled: params.getParam('isBTEnabled', ParamType.bool),
+            current_user: params.getParam('current_user', ParamType.String),
           ),
         ),
         FFRoute(

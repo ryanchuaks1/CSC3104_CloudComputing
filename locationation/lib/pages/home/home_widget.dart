@@ -1,10 +1,21 @@
+import 'dart:async';
+
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:locationation/backend/schema/util/extra.dart';
+import 'package:locationation/core/models/device_list_model.dart';
+import 'package:locationation/core/models/device_model.dart';
+import 'package:locationation/core/models/device_new_model.dart';
+import 'package:locationation/core/services/api_service.dart';
+
 import '/backend/api_requests/api_calls.dart';
+import '/backend/schema/structs/index.dart';
 import '/flutter_flow/flutter_flow_animations.dart';
 import '/flutter_flow/flutter_flow_google_map.dart';
 import '/flutter_flow/flutter_flow_icon_button.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
 import '/flutter_flow/flutter_flow_widgets.dart';
+import '/custom_code/actions/index.dart' as actions;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -18,10 +29,12 @@ class HomeWidget extends StatefulWidget {
   const HomeWidget({
     Key? key,
     bool? isScrolling,
+    required this.current_user,
   })  : this.isScrolling = isScrolling ?? true,
         super(key: key);
 
   final bool isScrolling;
+  final String current_user;
 
   @override
   _HomeWidgetState createState() => _HomeWidgetState();
@@ -31,6 +44,29 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   late HomeModel _model;
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
+
+  //Device Currently for Testing
+  Device curr_device = Device(
+      userId: "test_user",
+      deviceId: "f1740855-6716-11ee-9b42-107b44",
+      deviceName: "Testing_device",
+      latitude: double.parse("10.0"),
+      longitude: double.parse("20.0"));
+
+  //Timer
+  Timer? timer;
+  Timer? publishing_timer;
+  Timer? timer_2;
+
+  //Device ID
+  String? _deviceId;
+
+  List<DeviceNew> _devices = [];
+
+  String _value = "";
+
+  late StreamSubscription<List<ScanResult>> _scanResultsSubscription;
+  late StreamSubscription<bool> _isScanningSubscription;
 
   final animationsMap = {
     'containerOnPageLoadAnimation': AnimationInfo(
@@ -50,7 +86,31 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
+    print(widget.current_user);
     _model = createModel(context, () => HomeModel());
+
+    timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getAllDevices());
+
+    publishing_timer = Timer.periodic(
+        Duration(seconds: 5), (Timer t) => publishDeviceLocation());
+    timer_2 =
+        Timer.periodic(Duration(seconds: 10), (Timer t) => scanBLEDevices());
+
+    ApiService().getDeviceId().then((value) {
+      setState(() {
+        _deviceId = value;
+        print('Device ID: $value'); 
+      });
+    });
+
+    // On page load action.
+    // SchedulerBinding.instance.addPostFrameCallback((_) async {
+    //   _model.foundDevices = await actions.findDevices();
+    //   setState(() {
+    //     _model.scannedDevices =
+    //         _model.foundDevices!.toList().cast<BTDeviceStruct>();
+    //   });
+    // });
 
     setupAnimations(
       animationsMap.values.where((anim) =>
@@ -60,11 +120,95 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     );
   }
 
+  Future<List<DeviceNew>> getAllDevices() async {
+    print("Test");
+    _devices = await ApiService().getAllDevices(widget.current_user);
+    print(_devices.length);
+    setState(() {});
+    return _devices;
+  }
+
+  Future<void> publishDeviceLocation() async {
+    print("DEV MSG: Publishing Device Location");
+
+    //TODO: Device ID will be replaces with a getThisDevice Function
+
+    final _respond = await ApiService().publishCurrentLocation(curr_device);
+    print("Success: ${_respond}");
+  }
+
+  Future scanBLEDevices() async {
+    ScanResult targetDevice;
+    _scanResultsSubscription =
+        FlutterBluePlus.scanResults.listen((results) async {
+      for (ScanResult r in results) {
+        if (r.advertisementData.localName == "mpy-uart") {
+          targetDevice = r;
+          targetDevice.device.connectionState
+              .listen((BluetoothConnectionState state) {
+            if (state == BluetoothConnectionState.disconnected) {}
+          });
+          try {
+            await targetDevice.device.connect();
+
+            await receiveData(targetDevice.device);
+            print(_value);
+          } catch (e) {}
+        }
+      }
+    });
+
+    // Start scanning
+    await FlutterBluePlus.startScan();
+
+    Future.delayed(const Duration(seconds: 5));
+
+    _scanResultsSubscription.cancel();
+  }
+
+  Future<String?> receiveData(BluetoothDevice device) async {
+    try {
+      List<BluetoothService> services = await device.discoverServices();
+      for (BluetoothService service in services) {
+        for (BluetoothCharacteristic characteristic
+            in service.characteristics) {
+          final isRead = characteristic.properties.read;
+          final isNotify = characteristic.properties.notify;
+
+          if (isRead && isNotify) {
+            final subscription =
+                characteristic.onValueReceived.listen((value) {});
+            device.cancelWhenDisconnected(subscription);
+            await characteristic.setNotifyValue(true);
+            final value = await characteristic.read();
+            await device.disconnect(timeout: 3);
+            _value = String.fromCharCodes(value);
+            return String.fromCharCodes(value);
+          }
+        }
+      }
+    } catch (e) {
+      return null;
+    }
+
+    return null;
+  }
+
   @override
   void dispose() {
     _model.dispose();
 
     super.dispose();
+    timer!.cancel();
+    timer = null;
+
+    timer_2!.cancel();
+    timer_2 = null;
+
+    publishing_timer!.cancel();
+    publishing_timer = null;
+
+    _scanResultsSubscription.cancel();
   }
 
   @override
@@ -132,7 +276,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                           size: 18.0,
                         ),
                         onPressed: () async {
-                          context.pushNamed(
+                          context.pushReplacementNamed(
                             'Login',
                             queryParameters: {
                               'isBTEnabled': serializeParam(
@@ -182,13 +326,16 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                   0.0, 0.0, 20.0, 0.0),
                               child: FFButtonWidget(
                                 onPressed: () async {
-                                  context.pushNamed(
+                                  context.pushReplacementNamed(
                                     'AddDevice',
                                     queryParameters: {
                                       'isBTEnabled': serializeParam(
                                         false,
                                         ParamType.bool,
                                       ),
+                                      'current_user': serializeParam(
+                                          widget.current_user,
+                                          ParamType.String),
                                     }.withoutNulls,
                                   );
                                 },
@@ -225,159 +372,255 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
             ),
             Expanded(
               child: Container(
-                width: MediaQuery.sizeOf(context).width * 1.0,
-                height: MediaQuery.sizeOf(context).height * 1.0,
-                decoration: BoxDecoration(
-                  color: FlutterFlowTheme.of(context).secondaryBackground,
-                ),
-                child: FutureBuilder<ApiCallResponse>(
-                  future: DeviceAPIGroup.getAllDevicesCall.call(),
-                  builder: (context, snapshot) {
-                    // Customize what your widget looks like when it's loading.
-                    if (!snapshot.hasData) {
-                      return Center(
+                  width: MediaQuery.sizeOf(context).width * 1.0,
+                  height: MediaQuery.sizeOf(context).height * 1.0,
+                  decoration: BoxDecoration(
+                    color: FlutterFlowTheme.of(context).secondaryBackground,
+                  ),
+                  child: SingleChildScrollView(
+                      child: Column(
+                    mainAxisSize: MainAxisSize.max,
+                    children: List.generate(_devices.length, (index) {
+                      final devicesItem = _devices[index];
+                      return Align(
+                        alignment: AlignmentDirectional(0.00, -1.00),
                         child: Padding(
                           padding: EdgeInsetsDirectional.fromSTEB(
-                              0.0, 100.0, 0.0, 0.0),
-                          child: SizedBox(
-                            width: 50.0,
-                            height: 50.0,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                FlutterFlowTheme.of(context).primary,
+                              12.0, 12.0, 12.0, 12.0),
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: FlutterFlowTheme.of(context).accent1,
+                              borderRadius: BorderRadius.circular(20.0),
+                              shape: BoxShape.rectangle,
+                              border: Border.all(
+                                color: Colors.white,
                               ),
                             ),
-                          ),
-                        ),
-                      );
-                    }
-                    final columnGetAllDevicesResponse = snapshot.data!;
-                    return Builder(
-                      builder: (context) {
-                        final devices = getJsonField(
-                          columnGetAllDevicesResponse.jsonBody,
-                          r'''$.deviceList''',
-                        ).toList();
-                        return SingleChildScrollView(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            children:
-                                List.generate(devices.length, (devicesIndex) {
-                              final devicesItem = devices[devicesIndex];
-                              return Align(
-                                alignment: AlignmentDirectional(0.00, -1.00),
-                                child: Padding(
-                                  padding: EdgeInsetsDirectional.fromSTEB(
-                                      12.0, 12.0, 12.0, 12.0),
-                                  child: Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          FlutterFlowTheme.of(context).accent1,
-                                      borderRadius: BorderRadius.circular(20.0),
-                                      shape: BoxShape.rectangle,
-                                      border: Border.all(
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                            child: Padding(
+                              padding: EdgeInsetsDirectional.fromSTEB(
+                                  12.0, 6.0, 12.0, 6.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.max,
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  Expanded(
                                     child: Padding(
                                       padding: EdgeInsetsDirectional.fromSTEB(
-                                          12.0, 6.0, 12.0, 6.0),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.max,
+                                          12.0, 0.0, 12.0, 0.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
                                         mainAxisAlignment:
                                             MainAxisAlignment.start,
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.center,
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Expanded(
-                                            child: Padding(
-                                              padding: EdgeInsetsDirectional
-                                                  .fromSTEB(
-                                                      12.0, 0.0, 12.0, 0.0),
-                                              child: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    getJsonField(
-                                                      columnGetAllDevicesResponse
-                                                          .jsonBody,
-                                                      r'''$.deviceName''',
-                                                    ).toString(),
-                                                    style: FlutterFlowTheme.of(
-                                                            context)
-                                                        .headlineSmall
-                                                        .override(
-                                                          fontFamily:
-                                                              'Work Sans',
-                                                          fontSize: 18.0,
-                                                        ),
-                                                  ),
-                                                  Text(
-                                                    'User',
-                                                    style: FlutterFlowTheme.of(
-                                                            context)
-                                                        .bodySmall
-                                                        .override(
-                                                          fontFamily:
-                                                              'Plus Jakarta Sans',
-                                                          color:
-                                                              Color(0xFF4B39EF),
-                                                          fontSize: 12.0,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                        ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .fromSTEB(0.0, 4.0,
-                                                                0.0, 0.0),
-                                                    child: Text(
-                                                      'Last Updated',
-                                                      style: FlutterFlowTheme
-                                                              .of(context)
-                                                          .labelMedium
-                                                          .override(
-                                                            fontFamily:
-                                                                'Plus Jakarta Sans',
-                                                            color: Color(
-                                                                0xFF57636C),
-                                                            fontSize: 12.0,
-                                                            fontWeight:
-                                                                FontWeight.w500,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
+                                          Text(
+                                            devicesItem.deviceId,
+                                            style: FlutterFlowTheme.of(context)
+                                                .headlineSmall
+                                                .override(
+                                                  fontFamily: 'Work Sans',
+                                                  fontSize: 18.0,
+                                                ),
                                           ),
-                                          Icon(
-                                            Icons.keyboard_arrow_right_rounded,
-                                            color: Color(0xFF57636C),
-                                            size: 24.0,
+                                          Text(
+                                            'User',
+                                            style: FlutterFlowTheme.of(context)
+                                                .bodySmall
+                                                .override(
+                                                  fontFamily:
+                                                      'Plus Jakarta Sans',
+                                                  color: Color(0xFF4B39EF),
+                                                  fontSize: 12.0,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                          ),
+                                          Padding(
+                                            padding:
+                                                EdgeInsetsDirectional.fromSTEB(
+                                                    0.0, 4.0, 0.0, 0.0),
+                                            child: Text(
+                                              'Last Updated',
+                                              style: FlutterFlowTheme.of(
+                                                      context)
+                                                  .labelMedium
+                                                  .override(
+                                                    fontFamily:
+                                                        'Plus Jakarta Sans',
+                                                    color: Color(0xFF57636C),
+                                                    fontSize: 12.0,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ).animateOnPageLoad(animationsMap[
-                                      'containerOnPageLoadAnimation']!),
-                                ),
-                              );
-                            }),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
+                                  ),
+                                  Icon(
+                                    Icons.keyboard_arrow_right_rounded,
+                                    color: Color(0xFF57636C),
+                                    size: 24.0,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ).animateOnPageLoad(
+                              animationsMap['containerOnPageLoadAnimation']!),
+                        ),
+                      );
+                    }),
+                  ))),
+            )
+            // child: Container(
+            //   width: MediaQuery.sizeOf(context).width * 1.0,
+            //   height: MediaQuery.sizeOf(context).height * 1.0,
+            //   decoration: BoxDecoration(
+            //     color: FlutterFlowTheme.of(context).secondaryBackground,
+            //   ),
+            //   child: FutureBuilder(
+            //     future: getAllDevices(),
+            //     builder: (context, snapshot) {
+            //       // Customize what your widget looks like when it's loading.
+            //       if (!snapshot.hasData) {
+            //         return Center(
+            //           child: Padding(
+            //             padding: EdgeInsetsDirectional.fromSTEB(
+            //                 0.0, 100.0, 0.0, 0.0),
+            //             child: SizedBox(
+            //               width: 50.0,
+            //               height: 50.0,
+            //               child: CircularProgressIndicator(
+            //                 valueColor: AlwaysStoppedAnimation<Color>(
+            //                   FlutterFlowTheme.of(context).primary,
+            //                 ),
+            //               ),
+            //             ),
+            //           ),
+            //         );
+            //       }
+            //       return Builder(
+            //         builder: (context) {
+            //           final devices = snapshot.data != null
+            //               ? snapshot.data as List<DeviceList>
+            //               : const [];
+            //           return SingleChildScrollView(
+            //             child: Column(
+            //               mainAxisSize: MainAxisSize.max,
+            //               children:
+            //                   List.generate(devices.length, (devicesIndex) {
+            //                 final devicesItem = devices[devicesIndex];
+            //                 return Align(
+            //                   alignment: AlignmentDirectional(0.00, -1.00),
+            //                   child: Padding(
+            //                     padding: EdgeInsetsDirectional.fromSTEB(
+            //                         12.0, 12.0, 12.0, 12.0),
+            //                     child: Container(
+            //                       width: double.infinity,
+            //                       decoration: BoxDecoration(
+            //                         color:
+            //                             FlutterFlowTheme.of(context).accent1,
+            //                         borderRadius: BorderRadius.circular(20.0),
+            //                         shape: BoxShape.rectangle,
+            //                         border: Border.all(
+            //                           color: Colors.white,
+            //                         ),
+            //                       ),
+            //                       child: Padding(
+            //                         padding: EdgeInsetsDirectional.fromSTEB(
+            //                             12.0, 6.0, 12.0, 6.0),
+            //                         child: Row(
+            //                           mainAxisSize: MainAxisSize.max,
+            //                           mainAxisAlignment:
+            //                               MainAxisAlignment.start,
+            //                           crossAxisAlignment:
+            //                               CrossAxisAlignment.center,
+            //                           children: [
+            //                             Expanded(
+            //                               child: Padding(
+            //                                 padding: EdgeInsetsDirectional
+            //                                     .fromSTEB(
+            //                                         12.0, 0.0, 12.0, 0.0),
+            //                                 child: Column(
+            //                                   mainAxisSize: MainAxisSize.min,
+            //                                   mainAxisAlignment:
+            //                                       MainAxisAlignment.start,
+            //                                   crossAxisAlignment:
+            //                                       CrossAxisAlignment.start,
+            //                                   children: [
+            //                                     Text(
+            //                                       devicesItem.deviceName,
+            //                                       style: FlutterFlowTheme.of(
+            //                                               context)
+            //                                           .headlineSmall
+            //                                           .override(
+            //                                             fontFamily:
+            //                                                 'Work Sans',
+            //                                             fontSize: 18.0,
+            //                                           ),
+            //                                     ),
+            //                                     Text(
+            //                                       'User',
+            //                                       style: FlutterFlowTheme.of(
+            //                                               context)
+            //                                           .bodySmall
+            //                                           .override(
+            //                                             fontFamily:
+            //                                                 'Plus Jakarta Sans',
+            //                                             color:
+            //                                                 Color(0xFF4B39EF),
+            //                                             fontSize: 12.0,
+            //                                             fontWeight:
+            //                                                 FontWeight.w500,
+            //                                           ),
+            //                                     ),
+            //                                     Padding(
+            //                                       padding:
+            //                                           EdgeInsetsDirectional
+            //                                               .fromSTEB(0.0, 4.0,
+            //                                                   0.0, 0.0),
+            //                                       child: Text(
+            //                                         'Last Updated',
+            //                                         style: FlutterFlowTheme
+            //                                                 .of(context)
+            //                                             .labelMedium
+            //                                             .override(
+            //                                               fontFamily:
+            //                                                   'Plus Jakarta Sans',
+            //                                               color: Color(
+            //                                                   0xFF57636C),
+            //                                               fontSize: 12.0,
+            //                                               fontWeight:
+            //                                                   FontWeight.w500,
+            //                                             ),
+            //                                       ),
+            //                                     ),
+            //                                   ],
+            //                                 ),
+            //                               ),
+            //                             ),
+            //                             Icon(
+            //                               Icons.keyboard_arrow_right_rounded,
+            //                               color: Color(0xFF57636C),
+            //                               size: 24.0,
+            //                             ),
+            //                           ],
+            //                         ),
+            //                       ),
+            //                     ).animateOnPageLoad(animationsMap[
+            //                         'containerOnPageLoadAnimation']!),
+            //                   ),
+            //                 );
+            //               }),
+            //             ),
+            //           );
+            //         },
+            //       );
+            //     },
+            //   ),
+            // ),
           ],
         ),
       ),

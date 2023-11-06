@@ -2,6 +2,7 @@ FROM node:18-alpine
 
 #Create app directory
 WORKDIR /usr/src/app
+RUN mkdir /usr/src/app/data
 
 #Copies the package.json fle into the application image
 COPY package.json ./

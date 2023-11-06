@@ -3,10 +3,8 @@ Progress Report:
 - Initialise Client and Server (Kafka Consumer) Using GRPC
 - Print the reply from the server
 
-TODO:
-
-- Integration to api_service.dart
-- Link to SQL server to subscribe to all the devices by the user
+TODO: 
+- Comcbine all the functions (Start, Subscribe, Close) into 1 function since there is not much need for modularity at the moment
 
 RUN: 
 

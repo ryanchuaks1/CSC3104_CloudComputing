@@ -12,7 +12,8 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 Future<bool> turnOnBluetooth() async {
   if (isAndroid) {
-    return await FlutterBluePlus.instance.turnOn();
+    await FlutterBluePlus.turnOn();
+    return true;
   }
   return true;
 }

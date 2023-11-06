@@ -1,77 +1,89 @@
 class Kafka_Producer{
-    constructor(udid, client_id){
-        this._udid = udid;
+    constructor(client_id){
         const { Kafka } = require('kafkajs');
         this._kafka_conn = new Kafka({
             clientId: client_id,
             brokers: ['kafka:9092']
-        })
+        });
         this._producer = this._kafka_conn.producer();
     }
 
-    async update_location(location){
+    async load_topics(dir_path){
+        const fs = require('fs');
+        const readline = require('readline');
+        const path = require('path');
+        const kafka_admin = require("./admin.js");
+        const admin_client = new kafka_admin.Kafka_Admin('restoring-topic-admin');
+
+        var success = true;
+        
+        try {
+            const topic_files = fs.readdirSync(dir_path);
+
+            for (const topic_file of topic_files){
+                const file_path = path.join(dir_path, topic_file);
+                const file_status = fs.statSync(file_path);
+    
+                if(!file_status.isDirectory()){
+                    const topic_name = path.parse(topic_file).name;
+                    var topic_res = await admin_client.add_new_topic(topic_name);
+
+                    console.log("Result of adding topic: " + topic_res);
+    
+                    if(topic_res){
+                        const file_stream = fs.createReadStream(file_path);
+                        const read_line = readline.createInterface({
+                            input: file_stream,
+                            crlfDelay: Infinity
+                        });
+        
+                        for await (const line of read_line){
+                            const message = JSON.parse(line);
+                            var msg_res = await this.update_location(topic_name, message.timestamp, message.location);
+    
+                            if(!msg_res){
+                                success = false;
+                            }
+                        }
+                    }
+                    
+                    else{
+                        success = false;
+                    }
+                }
+            }
+            return success;
+
+        } catch (error) {
+            console.error("Error from load_topics(): " + error.message);
+            return false;
+        }
+    }
+
+    async update_location(udid, timestamp = null, location){
+        var res = null;
         try{
             await this._producer.connect();
-            await this._producer.send({
-                topic: this._udid,
+            res = await this._producer.send({
+                topic: udid,
                 messages: [
                     {
-                        key: String(new Date().getTime()),
+                        key: timestamp == null ? String(new Date().getTime()) : timestamp,
                         value: location
                     }
                 ]
             });
+            console.log("Result of sending location to kafka: " + (res != null));
         }
         catch(error){
-            console.error("Error: " + error.message);
+            console.error("Error from update_location: " + error.message);
         }
         finally{
             await this._producer.disconnect();
         }
+        return res;
     }
 }
 
 module.exports = { Kafka_Producer };
-
-// kafka_producer = new Kafka_Producer("f1740855-6716-11ee-9b42-107b44", "kafka-producer");
-
-// const interval = 5000; // milliseconds
-
-// setInterval(() => {
-//     kafka_producer.update_location('1.377476301551542, 103.84873335110395');
-// }, interval)
-
-// const uuid = "f1740855-6716-11ee-9b42-107b44"
-
-// const { Kafka } = require('kafkajs');
-
-// const kafka = new Kafka({
-//     clientId: 'my-app',
-//     brokers: ['kafka:9092'],
-// });
-
-// const producer = kafka.producer();
-
-// const run = async () => {
-//     await producer.connect();
-//     await producer.send({
-//         topic: uuid,
-//         messages: [
-//             {
-//                 key: 'device_1',
-//                 value: '1.377476301551542, 103.84873335110395'
-//             }
-//         ]
-//     });
-
-//     await producer.disconnect();
-// }
-
-// const interval = 5000; // milliseconds
-
-// setInterval(() => {
-//     run().catch(console.error);
-// }, interval)
-
-// console.log("Hello, Producer!");
 

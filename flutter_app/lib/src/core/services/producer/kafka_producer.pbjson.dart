@@ -30,13 +30,13 @@ const Location$json = {
   '1': 'Location',
   '2': [
     {'1': 'udid', '3': 1, '4': 1, '5': 9, '10': 'udid'},
-    {'1': 'location', '3': 3, '4': 1, '5': 9, '10': 'location'},
+    {'1': 'location', '3': 2, '4': 1, '5': 9, '10': 'location'},
   ],
 };
 
 /// Descriptor for `Location`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List locationDescriptor = $convert.base64Decode(
-    'CghMb2NhdGlvbhISCgR1ZGlkGAEgASgJUgR1ZGlkEhoKCGxvY2F0aW9uGAMgASgJUghsb2NhdG'
+    'CghMb2NhdGlvbhISCgR1ZGlkGAEgASgJUgR1ZGlkEhoKCGxvY2F0aW9uGAIgASgJUghsb2NhdG'
     'lvbg==');
 
 @$core.Deprecated('Use responseDescriptor instead')
