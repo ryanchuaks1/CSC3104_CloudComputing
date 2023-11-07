@@ -37,6 +37,8 @@ spec:
       containers:
         - image: ghcr.io/mcdulltii/cloud-server:latest
           name: cloud-server
+          stdin: true
+          tty: true
           ports:
             - containerPort: 5001
           resources: {}
