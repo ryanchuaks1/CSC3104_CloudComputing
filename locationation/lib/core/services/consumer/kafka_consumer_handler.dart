@@ -137,10 +137,10 @@ class KafkaConsumerHandler
         }
 
         //Get the location and print it (To be Used Outside)
-        String curr_location = getCurrentLocation();
+        // String curr_location = getCurrentLocation();
 
-        print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_location}');
-        print("${buffer}");
+        print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_message.location}');
+        // print("${buffer}");
       }
 
       message_count += 10;
