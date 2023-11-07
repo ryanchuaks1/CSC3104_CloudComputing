@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:grpc/grpc.dart';
 import 'package:intl/number_symbols_data.dart';
 import 'package:locationation/core/services/consumer/kafka_consumer.pbgrpc.dart';
@@ -16,7 +18,11 @@ void main() async {
   try {
     KafkaConsumerHandler handler = KafkaConsumerHandler('127.0.0.1', 50051);
     final uuid = Uuid();
-    handler.subscribeToDevice(uuid.v4(),"f1740855-6716-11ee-9b42-107b44");
+    handler.subscribeToDevice(uuid.v4(),"f1740855-6716-11ee-9b42-107b44", (String location) {
+      handler._enqueue(location);
+      handler.getCurrentLocation();
+    });
+
   } catch (error) {
     
     print("Error Executing");
@@ -65,6 +71,7 @@ class KafkaConsumerHandler
       
       if(_buffer.isNotEmpty)
       {
+        print("not empty");
         //Shorten the Buffer if there are more than 20 data location in the queue
         if(_buffer.length > 20)
         {
@@ -77,6 +84,7 @@ class KafkaConsumerHandler
       }
       else
       {
+        print("empty");
         return "";
       }
 
@@ -87,7 +95,7 @@ class KafkaConsumerHandler
   }
 
   //Initialising gRPC connection with the consumer server
-  Future<void> subscribeToDevice(String sessionId, String deviceId) async
+  Future<void> subscribeToDevice(String sessionId, String deviceId, Function callback) async
   {
     try {
 
@@ -118,16 +126,17 @@ class KafkaConsumerHandler
         //print("Getting Location!");
 
         //Put the Location into the buffer
-        if(curr_message != "")
-        {
-          _enqueue(curr_message.location);
 
-        }
+        callback(curr_message.location);
+        // if(curr_message != "")
+        // {
+        //   _enqueue(curr_message.location);
+        // }
 
         //Get the location and print it (To be Used Outside)
-        String curr_location = getCurrentLocation();
+        // String curr_location = getCurrentLocation();
 
-        print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_location}');
+        // print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_location}');
         print("${_buffer}");
       }
 
