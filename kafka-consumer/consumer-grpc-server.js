@@ -1,5 +1,5 @@
 const PROTO_PATH = __dirname + '/kafka_consumer.proto';
-const SERVER_SOCKET = "consumer-service:50051";
+const SERVER_SOCKET = "0.0.0.0:50051";
 const VOLUME_PATH = __dirname + '/data';
 
 //var parseArgs = require('minimist');

@@ -1,0 +1,96 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb
+  namespace: cloud-computing
+  labels:
+    app: mariadb
+spec:
+  ports:
+    - port: 3306
+      targetPort: 3306
+      name: mariadb
+  selector:
+    app: mariadb
+status:
+  loadBalancer: {}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mariadb-claim0-volume
+  namespace: cloud-computing
+  labels:
+    type: local
+    app: mariadb
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadOnlyMany
+  hostPath:
+    path: "/root/Downloads/cloud/CSC3104_CloudComputing/cloud/mysql-import"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: cloud-computing
+  labels:
+    app: mariadb
+  name: mariadb-claim0
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 100Mi
+status: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: cloud-computing
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mariadb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      namespace: cloud-computing
+      labels:
+        app: mariadb
+    spec:
+      containers:
+        - env:
+            - name: MARIADB_DATABASE
+              value: mysql_db
+            - name: MARIADB_PASSWORD
+              value: password
+            - name: MARIADB_ROOT_PASSWORD
+              value: password
+            - name: MARIADB_USER
+              value: user
+          image: mariadb
+          name: mariadb
+          ports:
+            - containerPort: 3306
+              protocol: TCP
+          resources: {}
+          volumeMounts:
+            - mountPath: /docker-entrypoint-initdb.d
+              name: mariadb-claim0
+              readOnly: true
+      restartPolicy: Always
+      volumes:
+        - name: mariadb-claim0
+          persistentVolumeClaim:
+            claimName: mariadb-claim0
+            readOnly: true
+status: {}
