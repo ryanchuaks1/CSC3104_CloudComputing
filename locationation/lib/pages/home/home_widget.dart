@@ -27,6 +27,8 @@ import 'package:uuid/uuid.dart';
 import 'home_model.dart';
 export 'home_model.dart';
 
+import 'package:geolocator/geolocator.dart';
+
 class HomeWidget extends StatefulWidget {
   const HomeWidget({
     Key? key,
@@ -55,6 +57,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
   //Device ID
   String? _thisDeviceID;
+  Device? current_device_object;
 
   List<DeviceNew> _devices = [];
   Map<String, KafkaConsumerHandler> _deviceSubcribers = {};
@@ -101,9 +104,11 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
           userId: widget.current_user, 
           deviceId: curr_device_id, 
           deviceName: widget.current_user + "'s Device", 
-          latitude: double.parse("10.0"),
-          longitude: double.parse("20.0"));
+          latitude: double.parse("0.0"),
+          longitude: double.parse("0.0"));
+
           ApiService().addNewDevice(newdevice);
+          current_device_object = newdevice;
 
         }
         else
@@ -134,7 +139,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     );
   }
 
-  static int curr_device_list_length = 0;
+  static int curr_list_length_all_devices = 0;
 
   Future<List<DeviceNew>> getAllDevices() async {
     print("Test");
@@ -148,10 +153,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
       _devices = curr_device_data_list;
 
       //Check if there are new subscribers by comparing old and new length
-      if (_devices.length != curr_device_list_length) {
+      if (_devices.length != curr_list_length_all_devices) {
         //If there is a difference, resubscribe
         subscribeToAllDevices();
-        curr_device_list_length = _devices.length;
+        curr_list_length_all_devices = _devices.length;
       } 
     }
     
@@ -159,23 +164,45 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     return _devices;
   }
 
+  Future<Position?> getCurrentDeviceLocation() async {
+    try {
+      // Request permission to access the device's location
+      LocationPermission permission = await Geolocator.requestPermission();
+
+      if (permission == LocationPermission.denied) {
+        return null;
+      }
+
+      // Get the current location
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      return position;
+
+    } catch (e) {
+      print("Error getting location: $e");
+      return null;
+    }
+  }
   //Publishing Location Working
   Future<void> publishDeviceLocation() async {
     print("DEV MSG: Publishing Device Location");
 
     //TODO: Device ID will be replaces with a getThisDevice Function
+    Position? curr_location = await getCurrentDeviceLocation();
 
-    Device curr_device = Device(
-      userId: "test_user",
-      deviceId: _thisDeviceID ?? "",
-      deviceName: "Testing_device",
-      latitude: double.parse("10.0"),
-      longitude: double.parse("20.0"));
+    if (curr_location == null) return; //return since there is no location to publish
 
-    if(curr_device.deviceId == ""){print("ERROR GETTING DEVICE ID");}
+    current_device_object!.latitude = curr_location.latitude;
+    current_device_object!.longitude = curr_location.longitude;
 
-    print("DEVICE TO PUBLISH: ${curr_device.deviceId}");
-    final _respond = await ApiService().publishCurrentLocation(curr_device);
+    print("Publishing to ${current_device_object!.deviceId} : Latitude(${curr_location.latitude}), Longitude(${curr_location.longitude})");
+
+    if(current_device_object!.deviceId == ""){print("ERROR GETTING DEVICE ID");}
+
+    print("DEVICE TO PUBLISH: ${current_device_object!.deviceId}");
+    final _respond = await ApiService().publishCurrentLocation(current_device_object!);
     print("Success: ${_respond}");
   }
 

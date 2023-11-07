@@ -71,6 +71,8 @@ dependencies:
   unique_identifier: 0.3.0 #For Unique Identifier
   uuid: ^3.0.7 #Generating unique session id for kafka consumer
 
+  geolocator: ^8.0.3 # Use to get Location
+
 dev_dependencies:
 
   flutter_test:
