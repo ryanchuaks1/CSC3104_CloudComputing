@@ -16,9 +16,13 @@ import 'package:protobuf/protobuf.dart' as $pb;
 /// request message
 class Subscribe_Data extends $pb.GeneratedMessage {
   factory Subscribe_Data({
+    $core.String? sid,
     $core.String? udid,
   }) {
     final $result = create();
+    if (sid != null) {
+      $result.sid = sid;
+    }
     if (udid != null) {
       $result.udid = udid;
     }
@@ -29,7 +33,8 @@ class Subscribe_Data extends $pb.GeneratedMessage {
   factory Subscribe_Data.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Subscribe_Data', package: const $pb.PackageName(_omitMessageNames ? '' : 'kafka_consumer_grpc'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'udid')
+    ..aOS(1, _omitFieldNames ? '' : 'sid')
+    ..aOS(2, _omitFieldNames ? '' : 'udid')
     ..hasRequiredFields = false
   ;
 
@@ -55,13 +60,22 @@ class Subscribe_Data extends $pb.GeneratedMessage {
   static Subscribe_Data? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get udid => $_getSZ(0);
+  $core.String get sid => $_getSZ(0);
   @$pb.TagNumber(1)
-  set udid($core.String v) { $_setString(0, v); }
+  set sid($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasUdid() => $_has(0);
+  $core.bool hasSid() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUdid() => clearField(1);
+  void clearSid() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get udid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set udid($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasUdid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUdid() => clearField(2);
 }
 
 class Location_Data extends $pb.GeneratedMessage {

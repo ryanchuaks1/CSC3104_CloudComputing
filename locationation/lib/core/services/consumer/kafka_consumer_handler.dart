@@ -1,6 +1,7 @@
 import 'package:grpc/grpc.dart';
 import 'package:intl/number_symbols_data.dart';
 import 'package:locationation/core/services/consumer/kafka_consumer.pbgrpc.dart';
+import 'package:uuid/uuid.dart';
 
 import 'dart:collection';
 import 'package:logging/logging.dart';
@@ -14,7 +15,8 @@ void main() async {
 
   try {
     KafkaConsumerHandler handler = KafkaConsumerHandler('127.0.0.1', 50051);
-    handler.subscribeToDevice("f1740855-6716-11ee-9b42-107b44");
+    final uuid = Uuid();
+    handler.subscribeToDevice(uuid.v4(),"f1740855-6716-11ee-9b42-107b44");
   } catch (error) {
     
     print("Error Executing");

@@ -10,7 +10,8 @@ service Kafka_Consumer_gRPC{
 
 // request message
 message Subscribe_Data{
-    string udid = 1; // Unique Device ID
+    string sid = 1; // Session ID
+    string udid = 2; // Unique Device ID
 }
 
 message Location_Data{
