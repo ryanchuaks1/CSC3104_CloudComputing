@@ -1,8 +1,8 @@
 import 'dart:io';
-
 import 'package:grpc/grpc.dart';
 import 'package:intl/number_symbols_data.dart';
 import 'package:locationation/core/services/consumer/kafka_consumer.pbgrpc.dart';
+import 'package:locationation/core/services/constants/app_constants.dart';
 import 'package:uuid/uuid.dart';
 
 import 'dart:collection';
@@ -19,7 +19,7 @@ void main() async {
   try {
     KafkaConsumerHandler handler = KafkaConsumerHandler();
     final uuid = Uuid();
-    handler.subscribeToDevice(uuid.v4(),"f1740855-6716-11ee-9b42-107b44");
+    handler.subscribeToDevice(uuid.v4(),"fd90e1fce28d8691");
 
   } catch (error) {
     
@@ -66,7 +66,7 @@ class KafkaConsumerHandler
     }
   }
 
-  Future<String> getCurrentLocation() async
+  String getCurrentLocation()
   {
     try {
       
@@ -142,7 +142,7 @@ class KafkaConsumerHandler
         String curr_location = getCurrentLocation();
 
         print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_location}');
-        print("${_buffer}");
+        print("${buffer}");
       }
 
       message_count += 10;

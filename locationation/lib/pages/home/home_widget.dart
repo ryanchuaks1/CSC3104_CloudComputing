@@ -23,6 +23,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 import 'home_model.dart';
 export 'home_model.dart';
 
@@ -187,7 +188,8 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
       {
         //Initailise Subscription and Assign to each device
         KafkaConsumerHandler curr_handler = KafkaConsumerHandler();
-        curr_handler.subscribeToDevice(curr_device.deviceId);
+        final uuid = Uuid();
+        curr_handler.subscribeToDevice(uuid.v4(),curr_device.deviceId);
 
         print("SUB: ObjectID for ${curr_device.deviceId} : ${curr_handler.objectId}");
         print("DEVICE TO SUBSCRIBE: ${curr_handler.temp_device_id}");
