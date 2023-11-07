@@ -186,17 +186,19 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
       for(DeviceNew curr_device in _devices)
       {
-        //Initailise Subscription and Assign to each device
-        KafkaConsumerHandler curr_handler = KafkaConsumerHandler();
+        KafkaConsumerHandler? curr_handler = _deviceSubcribers[curr_device.deviceId];
+
+        if(curr_handler == null)
+        {
+          curr_handler = KafkaConsumerHandler(); 
+          //Add a list to reference each device later
+          _deviceSubcribers[curr_device.deviceId] = curr_handler;
+        }
+
         final uuid = Uuid();
         curr_handler.subscribeToDevice(uuid.v4(),curr_device.deviceId);
-
-        print("SUB: ObjectID for ${curr_device.deviceId} : ${curr_handler.objectId}");
-        print("DEVICE TO SUBSCRIBE: ${curr_handler.temp_device_id}");
         print("Subscribed to ${curr_device.deviceId}");
-
-        //Add a list to reference each device later
-        _deviceSubcribers[curr_device.deviceId] = curr_handler;
+        
       }
 
     } catch (e) {print(e.toString());}
@@ -216,9 +218,6 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
       }
       else
       {
-        print("GET: ObjectID for ${curr_device_id}: ${curr_handler.objectId}");
-        print("COUNT: for ${curr_device_id}: ${curr_handler.message_count}");
-        //print("Buffer: ${curr_handler.buffer}");
         //TODO: Currently only print, need to pass the location
         String curr_location_data = await curr_handler.getCurrentLocation();
         print("LOCATION DATA: " + curr_location_data);

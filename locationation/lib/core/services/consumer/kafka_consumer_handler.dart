@@ -37,17 +37,12 @@ class KafkaConsumerHandler
   late Queue<String> buffer = Queue<String>();
   late String _kafkaIpAddress;
   late int _portNumber;
-
-  //Debugging Variables - TO BE DELETED
-  late int objectId;
-  int message_count = 0;
-  String temp_device_id = "";
+  bool isSubscribed = false;
 
   KafkaConsumerHandler()
   {
     _kafkaIpAddress = AppConstants.KAFKA_CONSUMER_IPADDRESS;
     _portNumber = AppConstants.KAFKA_CONSUMER_PORT;
-    objectId = Random().nextInt(1000000);
   }
 
   //Private Function
@@ -70,7 +65,6 @@ class KafkaConsumerHandler
       
       if(buffer.isNotEmpty)
       {
-        print("not empty");
         //Shorten the Buffer if there are more than 20 data location in the queue
         if(buffer.length > 20)
         {
@@ -83,7 +77,6 @@ class KafkaConsumerHandler
       }
       else
       {
-        print("empty");
         return "";
       }
 
@@ -93,63 +86,57 @@ class KafkaConsumerHandler
     }
   }
 
+   Future<void> subscribeToDevice(String sessionId, String deviceId) async 
+  {
+    if (isSubscribed) {
+      return;
+    }
+    else
+    {
+      _startSubscription(sessionId, deviceId);
+    }
+  }
   //Initialising gRPC connection with the consumer server
-  Future<void> subscribeToDevice(String sessionId, String deviceId) async
+  Future<void> _startSubscription(String sessionId, String deviceId) async
   {
     try {
-      message_count += 1;
       //Create the Channel
       _channel = ClientChannel(_kafkaIpAddress,
         port: _portNumber,
         options:
             const ChannelOptions(credentials: ChannelCredentials.insecure()));
 
-      message_count += 1;
       //Create the stub
       _stub = Kafka_Consumer_gRPCClient(_channel);
 
-      message_count += 1;
       // Add the paremeters to the message
       final params = Subscribe_Data()
         ..sid=sessionId
         ..udid=deviceId;
 
-      temp_device_id=deviceId;
-
-      message_count += 1;
       //Call subscribe and wait for a reply
       final stream = await _stub.subscribe(params);
 
       //Print the Reply
       // print('Greeter client received: ${stream.udid}, ${stream.timestamp}, ${stream.location}');
-      message_count += 1;
       await for (var curr_message in stream) {
-        // Process the received message as needed
-        // print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_message.location}');
 
-        //print("Getting Location!");
-        message_count += 1;
-        //Put the Location into the buffer
-
+        //Check if the messages are empty, if not, enqueue them
         if(curr_message != "")
         {
           _enqueue(curr_message.location);
         }
 
-        //Get the location and print it (To be Used Outside)
-        // String curr_location = getCurrentLocation();
-
         print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_message.location}');
-        // print("${buffer}");
       }
-
-      message_count += 10;
 
     } catch (error) {
       log.warning(error.toString());
     }
     finally
     {
+      //End the Subscription
+      isSubscribed = false;
       await _channel.shutdown();
     } 
   }
