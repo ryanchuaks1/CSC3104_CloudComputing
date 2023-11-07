@@ -16,9 +16,13 @@ import 'package:protobuf/protobuf.dart' as $pb;
 /// request message
 class Subscribe_Data extends $pb.GeneratedMessage {
   factory Subscribe_Data({
+    $core.String? sid,
     $core.String? udid,
   }) {
     final $result = create();
+    if (sid != null) {
+      $result.sid = sid;
+    }
     if (udid != null) {
       $result.udid = udid;
     }
@@ -29,7 +33,8 @@ class Subscribe_Data extends $pb.GeneratedMessage {
   factory Subscribe_Data.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Subscribe_Data', package: const $pb.PackageName(_omitMessageNames ? '' : 'kafka_consumer_grpc'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'udid')
+    ..aOS(1, _omitFieldNames ? '' : 'sid')
+    ..aOS(2, _omitFieldNames ? '' : 'udid')
     ..hasRequiredFields = false
   ;
 
@@ -55,13 +60,22 @@ class Subscribe_Data extends $pb.GeneratedMessage {
   static Subscribe_Data? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get udid => $_getSZ(0);
+  $core.String get sid => $_getSZ(0);
   @$pb.TagNumber(1)
-  set udid($core.String v) { $_setString(0, v); }
+  set sid($core.String v) { $_setString(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasUdid() => $_has(0);
+  $core.bool hasSid() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUdid() => clearField(1);
+  void clearSid() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get udid => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set udid($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasUdid() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearUdid() => clearField(2);
 }
 
 class Location_Data extends $pb.GeneratedMessage {
@@ -142,27 +156,13 @@ class Location_Data extends $pb.GeneratedMessage {
   void clearLocation() => clearField(3);
 }
 
-class Response_Data extends $pb.GeneratedMessage {
-  factory Response_Data({
-    $core.String? udid,
-    $core.bool? success,
-  }) {
-    final $result = create();
-    if (udid != null) {
-      $result.udid = udid;
-    }
-    if (success != null) {
-      $result.success = success;
-    }
-    return $result;
-  }
-  Response_Data._() : super();
-  factory Response_Data.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
-  factory Response_Data.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+class Request extends $pb.GeneratedMessage {
+  factory Request() => create();
+  Request._() : super();
+  factory Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
-  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response_Data', package: const $pb.PackageName(_omitMessageNames ? '' : 'kafka_consumer_grpc'), createEmptyInstance: create)
-    ..aOS(1, _omitFieldNames ? '' : 'udid')
-    ..aOB(2, _omitFieldNames ? '' : 'success')
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Request', package: const $pb.PackageName(_omitMessageNames ? '' : 'kafka_consumer_grpc'), createEmptyInstance: create)
     ..hasRequiredFields = false
   ;
 
@@ -170,40 +170,72 @@ class Response_Data extends $pb.GeneratedMessage {
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
   'Will be removed in next major version')
-  Response_Data clone() => Response_Data()..mergeFromMessage(this);
+  Request clone() => Request()..mergeFromMessage(this);
   @$core.Deprecated(
   'Using this can add significant overhead to your binary. '
   'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
   'Will be removed in next major version')
-  Response_Data copyWith(void Function(Response_Data) updates) => super.copyWith((message) => updates(message as Response_Data)) as Response_Data;
+  Request copyWith(void Function(Request) updates) => super.copyWith((message) => updates(message as Request)) as Request;
 
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
-  static Response_Data create() => Response_Data._();
-  Response_Data createEmptyInstance() => create();
-  static $pb.PbList<Response_Data> createRepeated() => $pb.PbList<Response_Data>();
+  static Request create() => Request._();
+  Request createEmptyInstance() => create();
+  static $pb.PbList<Request> createRepeated() => $pb.PbList<Request>();
   @$core.pragma('dart2js:noInline')
-  static Response_Data getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response_Data>(create);
-  static Response_Data? _defaultInstance;
+  static Request getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Request>(create);
+  static Request? _defaultInstance;
+}
+
+class Response extends $pb.GeneratedMessage {
+  factory Response({
+    $core.bool? success,
+  }) {
+    final $result = create();
+    if (success != null) {
+      $result.success = success;
+    }
+    return $result;
+  }
+  Response._() : super();
+  factory Response.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Response.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Response', package: const $pb.PackageName(_omitMessageNames ? '' : 'kafka_consumer_grpc'), createEmptyInstance: create)
+    ..aOB(1, _omitFieldNames ? '' : 'success')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Response clone() => Response()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Response copyWith(void Function(Response) updates) => super.copyWith((message) => updates(message as Response)) as Response;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Response create() => Response._();
+  Response createEmptyInstance() => create();
+  static $pb.PbList<Response> createRepeated() => $pb.PbList<Response>();
+  @$core.pragma('dart2js:noInline')
+  static Response getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Response>(create);
+  static Response? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $core.String get udid => $_getSZ(0);
+  $core.bool get success => $_getBF(0);
   @$pb.TagNumber(1)
-  set udid($core.String v) { $_setString(0, v); }
+  set success($core.bool v) { $_setBool(0, v); }
   @$pb.TagNumber(1)
-  $core.bool hasUdid() => $_has(0);
+  $core.bool hasSuccess() => $_has(0);
   @$pb.TagNumber(1)
-  void clearUdid() => clearField(1);
-
-  @$pb.TagNumber(2)
-  $core.bool get success => $_getBF(1);
-  @$pb.TagNumber(2)
-  set success($core.bool v) { $_setBool(1, v); }
-  @$pb.TagNumber(2)
-  $core.bool hasSuccess() => $_has(1);
-  @$pb.TagNumber(2)
-  void clearSuccess() => clearField(2);
+  void clearSuccess() => clearField(1);
 }
 
 

@@ -128,6 +128,38 @@ class Location extends $pb.GeneratedMessage {
   void clearLocation() => clearField(2);
 }
 
+class Request extends $pb.GeneratedMessage {
+  factory Request() => create();
+  Request._() : super();
+  factory Request.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory Request.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'Request', package: const $pb.PackageName(_omitMessageNames ? '' : 'kafka_producer_grpc'), createEmptyInstance: create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  Request clone() => Request()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  Request copyWith(void Function(Request) updates) => super.copyWith((message) => updates(message as Request)) as Request;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static Request create() => Request._();
+  Request createEmptyInstance() => create();
+  static $pb.PbList<Request> createRepeated() => $pb.PbList<Request>();
+  @$core.pragma('dart2js:noInline')
+  static Request getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<Request>(create);
+  static Request? _defaultInstance;
+}
+
 class Response extends $pb.GeneratedMessage {
   factory Response({
     $core.String? udid,

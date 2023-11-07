@@ -25,6 +25,10 @@ class Kafka_Consumer_gRPCClient extends $grpc.Client {
       '/kafka_consumer_grpc.Kafka_Consumer_gRPC/Subscribe',
       ($0.Subscribe_Data value) => value.writeToBuffer(),
       ($core.List<$core.int> value) => $0.Location_Data.fromBuffer(value));
+  static final _$export_Topics = $grpc.ClientMethod<$0.Request, $0.Response>(
+      '/kafka_consumer_grpc.Kafka_Consumer_gRPC/Export_Topics',
+      ($0.Request value) => value.writeToBuffer(),
+      ($core.List<$core.int> value) => $0.Response.fromBuffer(value));
 
   Kafka_Consumer_gRPCClient($grpc.ClientChannel channel,
       {$grpc.CallOptions? options,
@@ -34,6 +38,10 @@ class Kafka_Consumer_gRPCClient extends $grpc.Client {
 
   $grpc.ResponseStream<$0.Location_Data> subscribe($0.Subscribe_Data request, {$grpc.CallOptions? options}) {
     return $createStreamingCall(_$subscribe, $async.Stream.fromIterable([request]), options: options);
+  }
+
+  $grpc.ResponseFuture<$0.Response> export_Topics($0.Request request, {$grpc.CallOptions? options}) {
+    return $createUnaryCall(_$export_Topics, request, options: options);
   }
 }
 
@@ -49,11 +57,23 @@ abstract class Kafka_Consumer_gRPCServiceBase extends $grpc.Service {
         true,
         ($core.List<$core.int> value) => $0.Subscribe_Data.fromBuffer(value),
         ($0.Location_Data value) => value.writeToBuffer()));
+    $addMethod($grpc.ServiceMethod<$0.Request, $0.Response>(
+        'Export_Topics',
+        export_Topics_Pre,
+        false,
+        false,
+        ($core.List<$core.int> value) => $0.Request.fromBuffer(value),
+        ($0.Response value) => value.writeToBuffer()));
   }
 
   $async.Stream<$0.Location_Data> subscribe_Pre($grpc.ServiceCall call, $async.Future<$0.Subscribe_Data> request) async* {
     yield* subscribe(call, await request);
   }
 
+  $async.Future<$0.Response> export_Topics_Pre($grpc.ServiceCall call, $async.Future<$0.Request> request) async {
+    return export_Topics(call, await request);
+  }
+
   $async.Stream<$0.Location_Data> subscribe($grpc.ServiceCall call, $0.Subscribe_Data request);
+  $async.Future<$0.Response> export_Topics($grpc.ServiceCall call, $0.Request request);
 }

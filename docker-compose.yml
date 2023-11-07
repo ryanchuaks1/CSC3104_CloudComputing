@@ -5,7 +5,6 @@ services:
     build: cloud
     container_name: server
     restart: always
-    profiles: ['server', 'all']
     ports:
       - 5001:5001
     networks:
@@ -15,7 +14,6 @@ services:
     image: mariadb
     container_name: mariadb
     restart: always
-    profiles: ['server', 'all']
     environment:
       - MARIADB_DATABASE=mysql_db
       - MARIADB_ROOT_PASSWORD=password
@@ -26,21 +24,20 @@ services:
     networks:
       - location-system
 
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    restart: always
-    profiles: ['all']
-    environment:
-      PMA_HOST: mariadb
-      PMA_PORT: 3306
-      PMA_ARBITRARY: 1
-    ports:
-      - 127.0.0.1:8080:8080
-    depends_on:
-      - mariadb
-    networks:
-      - location-system
+  # phpmyadmin:
+  #   image: phpmyadmin/phpmyadmin
+  #   container_name: phpmyadmin
+  #   restart: always
+  #   environment:
+  #     PMA_HOST: mariadb
+  #     PMA_PORT: 3306
+  #     PMA_ARBITRARY: 1
+  #   ports:
+  #     - 127.0.0.1:8080:8080
+  #   depends_on:
+  #     - mariadb
+  #   networks:
+  #     - location-system
 
   kafka:
     image: bitnami/kafka:3.5
@@ -90,6 +87,8 @@ services:
       - location-system
     ports:
       - '50051:50051'
+    volumes:
+      - kafka-data:/usr/src/app/data/:rw
     depends_on:
       - kafka
       - producer-service
@@ -104,6 +103,8 @@ services:
       - location-system
     ports:
       - '50052:50052'
+    volumes:
+      - kafka-data:/usr/src/app/data/:ro
     depends_on:
       - kafka
       # - admin-service
@@ -124,4 +125,6 @@ services:
 networks:
   location-system:
     driver: bridge
-  app_network:
+
+volumes:
+  kafka-data:

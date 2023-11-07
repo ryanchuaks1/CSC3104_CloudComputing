@@ -25,6 +25,11 @@ class Kafka_Producer_gRPCStub(object):
                 request_serializer=kafka__producer__pb2.Topic.SerializeToString,
                 response_deserializer=kafka__producer__pb2.Response.FromString,
                 )
+        self.Load_Topics = channel.unary_unary(
+                '/kafka_producer_grpc.Kafka_Producer_gRPC/Load_Topics',
+                request_serializer=kafka__producer__pb2.Request.SerializeToString,
+                response_deserializer=kafka__producer__pb2.Response.FromString,
+                )
 
 
 class Kafka_Producer_gRPCServicer(object):
@@ -43,6 +48,12 @@ class Kafka_Producer_gRPCServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def Load_Topics(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_Kafka_Producer_gRPCServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -54,6 +65,11 @@ def add_Kafka_Producer_gRPCServicer_to_server(servicer, server):
             'Add_New_Topic': grpc.unary_unary_rpc_method_handler(
                     servicer.Add_New_Topic,
                     request_deserializer=kafka__producer__pb2.Topic.FromString,
+                    response_serializer=kafka__producer__pb2.Response.SerializeToString,
+            ),
+            'Load_Topics': grpc.unary_unary_rpc_method_handler(
+                    servicer.Load_Topics,
+                    request_deserializer=kafka__producer__pb2.Request.FromString,
                     response_serializer=kafka__producer__pb2.Response.SerializeToString,
             ),
     }
@@ -97,6 +113,23 @@ class Kafka_Producer_gRPC(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/kafka_producer_grpc.Kafka_Producer_gRPC/Add_New_Topic',
             kafka__producer__pb2.Topic.SerializeToString,
+            kafka__producer__pb2.Response.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Load_Topics(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/kafka_producer_grpc.Kafka_Producer_gRPC/Load_Topics',
+            kafka__producer__pb2.Request.SerializeToString,
             kafka__producer__pb2.Response.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

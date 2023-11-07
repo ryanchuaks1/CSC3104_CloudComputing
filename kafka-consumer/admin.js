@@ -55,6 +55,8 @@ class Kafka_Admin{
                 }],
             });
 
+            console.log("Result: " + res);
+
             if(res){
                 console.log("Successfully created topic: " + udid);
             }
@@ -69,8 +71,6 @@ class Kafka_Admin{
         finally{
             await this._admin.disconnect();
         }
-
-        return res;
     }
 }
 

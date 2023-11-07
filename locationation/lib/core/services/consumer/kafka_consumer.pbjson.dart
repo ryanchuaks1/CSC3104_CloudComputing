@@ -17,13 +17,14 @@ import 'dart:typed_data' as $typed_data;
 const Subscribe_Data$json = {
   '1': 'Subscribe_Data',
   '2': [
-    {'1': 'udid', '3': 1, '4': 1, '5': 9, '10': 'udid'},
+    {'1': 'sid', '3': 1, '4': 1, '5': 9, '10': 'sid'},
+    {'1': 'udid', '3': 2, '4': 1, '5': 9, '10': 'udid'},
   ],
 };
 
 /// Descriptor for `Subscribe_Data`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List subscribe_DataDescriptor = $convert.base64Decode(
-    'Cg5TdWJzY3JpYmVfRGF0YRISCgR1ZGlkGAEgASgJUgR1ZGlk');
+    'Cg5TdWJzY3JpYmVfRGF0YRIQCgNzaWQYASABKAlSA3NpZBISCgR1ZGlkGAIgASgJUgR1ZGlk');
 
 @$core.Deprecated('Use location_DataDescriptor instead')
 const Location_Data$json = {
@@ -40,17 +41,24 @@ final $typed_data.Uint8List location_DataDescriptor = $convert.base64Decode(
     'Cg1Mb2NhdGlvbl9EYXRhEhIKBHVkaWQYASABKAlSBHVkaWQSHAoJdGltZXN0YW1wGAIgASgJUg'
     'l0aW1lc3RhbXASGgoIbG9jYXRpb24YAyABKAlSCGxvY2F0aW9u');
 
-@$core.Deprecated('Use response_DataDescriptor instead')
-const Response_Data$json = {
-  '1': 'Response_Data',
+@$core.Deprecated('Use requestDescriptor instead')
+const Request$json = {
+  '1': 'Request',
+};
+
+/// Descriptor for `Request`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List requestDescriptor = $convert.base64Decode(
+    'CgdSZXF1ZXN0');
+
+@$core.Deprecated('Use responseDescriptor instead')
+const Response$json = {
+  '1': 'Response',
   '2': [
-    {'1': 'udid', '3': 1, '4': 1, '5': 9, '10': 'udid'},
-    {'1': 'success', '3': 2, '4': 1, '5': 8, '10': 'success'},
+    {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
   ],
 };
 
-/// Descriptor for `Response_Data`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List response_DataDescriptor = $convert.base64Decode(
-    'Cg1SZXNwb25zZV9EYXRhEhIKBHVkaWQYASABKAlSBHVkaWQSGAoHc3VjY2VzcxgCIAEoCFIHc3'
-    'VjY2Vzcw==');
+/// Descriptor for `Response`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List responseDescriptor = $convert.base64Decode(
+    'CghSZXNwb25zZRIYCgdzdWNjZXNzGAEgASgIUgdzdWNjZXNz');
 
