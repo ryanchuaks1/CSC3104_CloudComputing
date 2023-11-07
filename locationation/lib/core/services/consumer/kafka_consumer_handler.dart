@@ -28,8 +28,6 @@ void main() async {
 
 }
 
-
-
 class KafkaConsumerHandler
 {
   //Class Variables
