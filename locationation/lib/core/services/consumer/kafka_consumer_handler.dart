@@ -19,7 +19,9 @@ void main() async {
   try {
     KafkaConsumerHandler handler = KafkaConsumerHandler();
     final uuid = Uuid();
-    handler.subscribeToDevice(uuid.v4(),"fd90e1fce28d8691");
+    handler.subscribeToDevice(uuid.v4(),"fd90e1fce28d8691", (String udid, String timestamp, String location) {
+      print('Received message: ${udid} , ${timestamp}, ${location}');
+    });
 
   } catch (error) {
     
@@ -93,10 +95,24 @@ class KafkaConsumerHandler
     }
   }
 
+  bool isSubscribed = false;
+
+  Future<void> subscribing(String sessionId, String deviceId, Function callback) async 
+  {
+    if (isSubscribed) {
+      return;
+    }
+    else
+    {
+      subscribeToDevice(sessionId, deviceId, callback);
+    }
+  }
+
   //Initialising gRPC connection with the consumer server
-  Future<void> subscribeToDevice(String sessionId, String deviceId) async
+  Future<void> subscribeToDevice(String sessionId, String deviceId, Function callback) async
   {
     try {
+      isSubscribed = true;
       message_count += 1;
       //Create the Channel
       _channel = ClientChannel(_kafkaIpAddress,
@@ -123,6 +139,7 @@ class KafkaConsumerHandler
       //Print the Reply
       // print('Greeter client received: ${stream.udid}, ${stream.timestamp}, ${stream.location}');
       message_count += 1;
+
       await for (var curr_message in stream) {
         // Process the received message as needed
         // print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_message.location}');
@@ -130,17 +147,18 @@ class KafkaConsumerHandler
         //print("Getting Location!");
         message_count += 1;
         //Put the Location into the buffer
+        callback(curr_message.udid, curr_message.timestamp, curr_message.location);
 
         if(curr_message != "")
         {
           _enqueue(curr_message.location);
         }
 
-        //Get the location and print it (To be Used Outside)
-        String curr_location = getCurrentLocation();
+        // //Get the location and print it (To be Used Outside)
+        // String curr_location = getCurrentLocation();
 
-        print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_location}');
-        print("${buffer}");
+        // print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_location}');
+        // print("${buffer}");
       }
 
       message_count += 10;

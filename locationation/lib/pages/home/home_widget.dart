@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:locationation/backend/schema/util/extra.dart';
@@ -6,7 +7,7 @@ import 'package:locationation/core/models/device_list_model.dart';
 import 'package:locationation/core/models/device_model.dart';
 import 'package:locationation/core/models/device_new_model.dart';
 import 'package:locationation/core/services/api_service.dart';
-import 'package:locationation/core/services/consumer/kafka_consumer_handler.dart';
+//import 'package:locationation/core/services/consumer/kafka_consumer_handler.dart';
 
 import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/structs/index.dart';
@@ -26,6 +27,160 @@ import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'home_model.dart';
 export 'home_model.dart';
+
+import 'package:grpc/grpc.dart';
+import 'package:locationation/core/services/consumer/kafka_consumer.pbgrpc.dart';
+import 'package:locationation/core/services/constants/app_constants.dart';
+
+import 'dart:collection';
+import 'dart:math';
+import 'package:logging/logging.dart';
+
+final log = Logger('ApiLogger');
+
+class KafkaConsumerHandler
+{
+  //Class Variables
+  late Kafka_Consumer_gRPCClient _stub;
+  late ClientChannel _channel;
+
+  late Queue<String> buffer = Queue<String>();
+  late String _kafkaIpAddress;
+  late int _portNumber;
+
+  //Debugging Variables - TO BE DELETED
+  late int objectId;
+  int message_count = 0;
+  String temp_device_id = "";
+
+  KafkaConsumerHandler()
+  {
+    _kafkaIpAddress = AppConstants.KAFKA_CONSUMER_IPADDRESS;
+    _portNumber = AppConstants.KAFKA_CONSUMER_PORT;
+    objectId = Random().nextInt(1000000);
+  }
+
+  //Private Function
+  bool _enqueue(String location)
+  {
+    try {
+      
+      buffer.add(location);
+      return true;
+
+    } catch (e) {
+      log.warning(e.toString());
+      return false;
+    }
+  }
+
+  String getCurrentLocation()
+  {
+    try {
+      
+      if(buffer.isNotEmpty)
+      {
+        print("not empty");
+        //Shorten the Buffer if there are more than 20 data location in the queue
+        if(buffer.length > 20)
+        {
+          for (var i = 0; i < 15; i++) {
+            buffer.removeFirst();
+          }
+        }
+
+        return buffer.removeFirst();
+      }
+      else
+      {
+        print("empty");
+        return "";
+      }
+
+    } catch (e) {
+      log.warning(e.toString());
+      return "";
+    }
+  }
+
+  bool isSubscribed = false;
+
+  Future<void> subscribing(String sessionId, String deviceId, Function callback) async 
+  {
+    if (isSubscribed) {
+      return;
+    }
+    else
+    {
+      subscribeToDevice(sessionId, deviceId, callback);
+    }
+  }
+
+  //Initialising gRPC connection with the consumer server
+  Future<void> subscribeToDevice(String sessionId, String deviceId, Function callback) async
+  {
+    try {
+      isSubscribed = true;
+      message_count += 1;
+      //Create the Channel
+      _channel = ClientChannel(_kafkaIpAddress,
+        port: _portNumber,
+        options:
+            const ChannelOptions(credentials: ChannelCredentials.insecure()));
+
+      message_count += 1;
+      //Create the stub
+      _stub = Kafka_Consumer_gRPCClient(_channel);
+
+      message_count += 1;
+      // Add the paremeters to the message
+      final params = Subscribe_Data()
+        ..sid=sessionId
+        ..udid=deviceId;
+
+      temp_device_id=deviceId;
+
+      message_count += 1;
+      //Call subscribe and wait for a reply
+      final stream = await _stub.subscribe(params);
+
+      //Print the Reply
+      // print('Greeter client received: ${stream.udid}, ${stream.timestamp}, ${stream.location}');
+      message_count += 1;
+
+      await for (var curr_message in stream) {
+        // Process the received message as needed
+        // print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_message.location}');
+
+        //print("Getting Location!");
+        message_count += 1;
+        //Put the Location into the buffer
+        callback(curr_message.udid, curr_message.timestamp, curr_message.location);
+
+        if(curr_message != "")
+        {
+          _enqueue(curr_message.location);
+        }
+
+        // //Get the location and print it (To be Used Outside)
+        // String curr_location = getCurrentLocation();
+
+        // print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_location}');
+        print(" BUFFER FROM THE CLASS: ${buffer}");
+      }
+
+      message_count += 10;
+
+    } catch (error) {
+      log.warning(error.toString());
+    }
+    finally
+    {
+      await _channel.shutdown();
+    } 
+  }
+
+}
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget({
@@ -57,6 +212,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   String? _thisDeviceID;
 
   List<DeviceNew> _devices = [];
+  List<String> subscribed_devices = [];
   Map<String, KafkaConsumerHandler> _deviceSubcribers = {};
 
   String _value = "";
@@ -104,7 +260,6 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
           latitude: double.parse("10.0"),
           longitude: double.parse("20.0"));
           ApiService().addNewDevice(newdevice);
-
         }
         else
         {
@@ -112,10 +267,17 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
         }
       });
     });
-
     publishing_timer = Timer.periodic(Duration(seconds: 5), (Timer t) => publishDeviceLocation());
 
-    get_location_timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getUpdatedDeviceLocations());
+    sleep(const Duration(seconds: 5));
+
+    KafkaConsumerHandler handler = KafkaConsumerHandler();
+    final uuid = Uuid();
+    handler.subscribeToDevice(uuid.v4(),"fd90e1fce28d8691", (String udid, String timestamp, String location) {
+      print('Received message: ${udid} , ${timestamp}, ${location}');
+    });
+
+    //get_location_timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getUpdatedDeviceLocations());
 
     // On page load action.
     // SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -150,7 +312,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
       //Check if there are new subscribers by comparing old and new length
       if (_devices.length != curr_device_list_length) {
         //If there is a difference, resubscribe
-        subscribeToAllDevices();
+        //await subscribeToAllDevices();
         curr_device_list_length = _devices.length;
       } 
     }
@@ -178,19 +340,30 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     final _respond = await ApiService().publishCurrentLocation(curr_device);
     print("Success: ${_respond}");
   }
-
+  
   //Subscribe to all the devices in the _devices list
   Future<void> subscribeToAllDevices() async
   {
     try {
-
       for(DeviceNew curr_device in _devices)
       {
         //Initailise Subscription and Assign to each device
-        KafkaConsumerHandler curr_handler = KafkaConsumerHandler();
-        final uuid = Uuid();
-        curr_handler.subscribeToDevice(uuid.v4(),curr_device.deviceId);
 
+        KafkaConsumerHandler? curr_handler = _deviceSubcribers[curr_device.deviceId];
+
+        if(curr_handler == null)
+        {
+          curr_handler = KafkaConsumerHandler(); 
+        }
+
+        final uuid = Uuid();
+        curr_handler.subscribing(uuid.v4(), curr_device.deviceId, (String udid, String timestamp, String location) {
+          print('Received message: ${udid}, ${timestamp}, ${location}');
+          print("BUFFERRRRRR: ${curr_handler?.buffer}");
+
+        });
+        
+        print("COUNT: for ${curr_device.deviceId}: ${curr_handler.message_count}");
         print("SUB: ObjectID for ${curr_device.deviceId} : ${curr_handler.objectId}");
         print("DEVICE TO SUBSCRIBE: ${curr_handler.temp_device_id}");
         print("Subscribed to ${curr_device.deviceId}");
@@ -202,29 +375,33 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     } catch (e) {print(e.toString());}
   }
 
-  //Get all teh Updated Device Locations
-  Future<void> getUpdatedDeviceLocations() async 
-  {
-    for (String curr_device_id in _deviceSubcribers.keys) 
-    {
-      KafkaConsumerHandler? curr_handler = _deviceSubcribers[curr_device_id];
+  // void locationCallback(String udid, String timestamp, String location){
+  //   print('NEW THING: Received message: ${udid} , ${timestamp}, ${location}');
+  // }
+
+  // //Get all teh Updated Device Locations
+  // Future<void> getUpdatedDeviceLocations() async 
+  // {
+  //   for (String curr_device_id in _deviceSubcribers.keys) 
+  //   {
+  //     KafkaConsumerHandler? curr_handler = _deviceSubcribers[curr_device_id];
       
-      if (curr_handler == null) {
-        //If there is a null handler, resubscribe
-        subscribeToAllDevices();
-        return;
-      }
-      else
-      {
-        print("GET: ObjectID for ${curr_device_id}: ${curr_handler.objectId}");
-        print("COUNT: for ${curr_device_id}: ${curr_handler.message_count}");
-        //print("Buffer: ${curr_handler.buffer}");
-        //TODO: Currently only print, need to pass the location
-        String curr_location_data = await curr_handler.getCurrentLocation();
-        print("LOCATION DATA: " + curr_location_data);
-      }
-    }
-  }
+  //     if (curr_handler == null) {
+  //       //If there is a null handler, resubscribe
+  //       subscribeToAllDevices();
+  //       return;
+  //     }
+  //     else
+  //     {
+  //       print("GET: ObjectID for ${curr_device_id}: ${curr_handler.objectId}");
+  //       print("COUNT: for ${curr_device_id}: ${curr_handler.message_count}");
+  //       //print("Buffer: ${curr_handler.buffer}");
+  //       //TODO: Currently only print, need to pass the location
+  //       String curr_location_data = await curr_handler.getCurrentLocation();
+  //       print("LOCATION DATA: " + curr_location_data);
+  //     }
+  //   }
+  // }
 
   Future scanBLEDevices() async {
     ScanResult targetDevice;
