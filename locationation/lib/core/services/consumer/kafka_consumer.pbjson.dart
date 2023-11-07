@@ -17,14 +17,13 @@ import 'dart:typed_data' as $typed_data;
 const Subscribe_Data$json = {
   '1': 'Subscribe_Data',
   '2': [
-    {'1': 'sid', '3': 1, '4': 1, '5': 9, '10': 'sid'},
-    {'1': 'udid', '3': 2, '4': 1, '5': 9, '10': 'udid'},
+    {'1': 'udid', '3': 1, '4': 1, '5': 9, '10': 'udid'},
   ],
 };
 
 /// Descriptor for `Subscribe_Data`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List subscribe_DataDescriptor = $convert.base64Decode(
-    'Cg5TdWJzY3JpYmVfRGF0YRIQCgNzaWQYASABKAlSA3NpZBISCgR1ZGlkGAIgASgJUgR1ZGlk');
+    'Cg5TdWJzY3JpYmVfRGF0YRISCgR1ZGlkGAEgASgJUgR1ZGlk');
 
 @$core.Deprecated('Use location_DataDescriptor instead')
 const Location_Data$json = {
