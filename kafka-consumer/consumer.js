@@ -3,7 +3,7 @@ class Kafka_Consumer{
         const { Kafka } = require('kafkajs');
         this._kafka_conn = new Kafka({
             clientId: client_id,
-            brokers: ['kafka-0.kafka-hs.cloud-computing.svc.cluster.local:9092']
+            brokers: ['kafka-hs:9092']
         });
         this._consumer = this._kafka_conn.consumer({
             groupId: group_id

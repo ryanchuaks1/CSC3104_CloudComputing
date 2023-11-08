@@ -1,8 +1,8 @@
-import grpc
 import uuid
 import json
-from concurrent import futures
 import mysql.connector
+from concurrent import futures
+import grpc
 from device_pb2 import Item, Reply, UserInstance
 from device_pb2_grpc import DeviceServicer, add_DeviceServicer_to_server
 
@@ -16,8 +16,8 @@ class Device(DeviceServicer):
     def __init__(self) -> None:
         # Define the MySQL connection parameters
         self.MYSQL_HOST = "mariadb"
-        self.MYSQL_USER = "user"
-        self.MYSQL_PASSWORD = "password"
+        self.MYSQL_USER = "root"
+        self.MYSQL_PASSWORD = "secret"
         self.MYSQL_DATABASE = "mysql_db"
         self.KAFKA_ADDRESS = "producer-service:50052"
 

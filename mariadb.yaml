@@ -34,11 +34,11 @@ data:
     CREATE INDEX `idx_device` USING HASH ON `devices` (`user_id`);
 
   secondary.sql: |
-    # We have to know name of sts (`mariadb`) and 
-    # service `mariadb-service` in advance as an FQDN.
+    # We have to know name of sts (`mariadb`) and
+    # service `mariadb` in advance as an FQDN.
     # No need to use master_port
-    CHANGE MASTER TO 
-    MASTER_HOST='mariadb-0.mariadb-service.default.svc.cluster.local',
+    CHANGE MASTER TO
+    MASTER_HOST='mariadb-0.mariadb.cloud-computing.svc.cluster.local',
     MASTER_USER='user',
     MASTER_PASSWORD='password',
     MASTER_CONNECT_RETRY=10;
@@ -55,7 +55,7 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: mariadb-service
+  name: mariadb
   namespace: cloud-computing
   labels:
     app: mariadb
@@ -73,7 +73,7 @@ metadata:
   name: mariadb
   namespace: cloud-computing
 spec:
-  serviceName: "mariadb-service"
+  serviceName: "mariadb"
   replicas: 3
   selector:
     matchLabels:
@@ -94,13 +94,13 @@ spec:
         - |
           set -ex
           echo 'Starting init-mariadb';
-          # Check config map to directory that already exists 
+          # Check config map to directory that already exists
           # (but must be used as a volume for main container)
           ls /mnt/config-map
           # Statefulset has sticky identity, number should be last
           [[ `hostname` =~ -([0-9]+)$ ]] || exit 1
           ordinal=${BASH_REMATCH[1]}
-          # Copy appropriate conf.d files from config-map to 
+          # Copy appropriate conf.d files from config-map to
           # mariadb-config volume (emptyDir) depending on pod number
           if [[ $ordinal -eq 0 ]]; then
             # This file holds SQL for connecting to primary

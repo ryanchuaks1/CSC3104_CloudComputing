@@ -3,7 +3,7 @@ class Kafka_Admin{
         const { Kafka } = require('kafkajs');
         this._kafka_conn = new Kafka({
             clientId: client_id,
-            brokers: ['kafka-0.kafka-hs.cloud-computing.svc.cluster.local:9092']
+            brokers: ['kafka-hs:9092']
         })
         this._admin = this._kafka_conn.admin();
     }

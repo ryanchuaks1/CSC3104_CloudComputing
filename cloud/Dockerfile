@@ -8,8 +8,10 @@ RUN apt install build-essential -y
 
 WORKDIR /server
 
-COPY . .
+COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
+
+COPY . .
 RUN make
 
 # ENTRYPOINT ["/wait-for-it.sh", "mariadb:3306", "-t", "100", "--", "python", "server.py"]
