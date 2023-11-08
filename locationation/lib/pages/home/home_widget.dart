@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:locationation/backend/schema/util/extra.dart';
@@ -50,10 +51,21 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<FlutterFlowMarker> markers = [
+  List<FlutterFlowMarker> markers = [
     FlutterFlowMarker(
       'marker1',
+      'marker1',
       LatLng(1.38,
+          103.8), // Use the LatLng class from the FlutterFlowMarker package
+      () async {
+        // Optional onTap function
+        // You can define what happens when the marker is tapped here
+      },
+    ),
+        FlutterFlowMarker(
+      'marker2',
+      'marker2',
+      LatLng(1.48,
           103.8), // Use the LatLng class from the FlutterFlowMarker package
       () async {
         // Optional onTap function
@@ -109,7 +121,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     ApiService().getDeviceId().then((value) {
       setState(() {
         _thisDeviceID = value;
-        print('Device ID: $value');
+        print('########################DEVICE ID: $value');
 
         String curr_device_id = value ?? "";
         if (curr_device_id != "") {
@@ -129,7 +141,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     });
 
     publishing_timer = Timer.periodic(
-        Duration(seconds: 5), (Timer t) => publishDeviceLocation());
+        Duration(seconds: 15), (Timer t) => publishDeviceLocation());
 
     get_location_timer = Timer.periodic(
         Duration(seconds: 5), (Timer t) => getUpdatedDeviceLocations());
@@ -205,6 +217,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     //TODO: Device ID will be replaces with a getThisDevice Function
     Position? curr_location = await getCurrentDeviceLocation();
 
+    print('########################DEVICE ID: ${_thisDeviceID}');
+    print('########################DEVICE ID: ${_thisDeviceID}');
+    print('########################DEVICE ID: ${_thisDeviceID}');
+
     if (curr_location == null)
       return; //return since there is no location to publish
 
@@ -257,6 +273,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
         return;
       } else {
         //TODO: Currently only print, need to pass the location
+
+        //Refresh marker buffer
+        
+
         String location_data_string = await curr_handler.getCurrentLocation();
         if (location_data_string != "") {
           print("LOCATION DATA: " + location_data_string);
@@ -265,11 +285,27 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
           Map<String, dynamic> location_data =
               json.decode(location_data_string);
 
-          print(
-              "LOCATION DATA IN JSON: ${location_data["latitude"]}, ${location_data["longitude"]}");
+          double latitude_location_data = double.parse(location_data["latitude"]);
+          double longitude_location_data = double.parse(location_data["longitude"]);
+
+          FlutterFlowMarker curr_marker = FlutterFlowMarker(
+            curr_device_id,
+            curr_device_id,
+            LatLng(latitude_location_data,
+                longitude_location_data), // Use the LatLng class from the FlutterFlowMarker package
+            () async {
+              // Optional onTap function
+              // You can define what happens when the marker is tapped here
+            },
+          );
+
+          markers.add(curr_marker);
+          print("LOCATION DATA IN JSON: ${location_data["latitude"]}, ${location_data["longitude"]}");
         }
       }
     }
+
+    setState(() {});
   }
 
   Future scanBLEDevices() async {
