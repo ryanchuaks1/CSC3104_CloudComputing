@@ -24,7 +24,7 @@ metadata:
   name: consumer
   namespace: cloud-computing
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: consumer

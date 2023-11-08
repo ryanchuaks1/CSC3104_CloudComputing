@@ -37,7 +37,7 @@ metadata:
   namespace: cloud-computing
 spec:
   serviceName: zk-hs
-  replicas: 2
+  replicas: 3
   podManagementPolicy: Parallel
   updateStrategy:
     type: RollingUpdate

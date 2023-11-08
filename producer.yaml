@@ -22,7 +22,7 @@ metadata:
   name: producer
   namespace: cloud-computing
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: producer

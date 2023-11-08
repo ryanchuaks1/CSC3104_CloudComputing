@@ -24,7 +24,7 @@ metadata:
   name: cloud
   namespace: cloud-computing
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app: cloud

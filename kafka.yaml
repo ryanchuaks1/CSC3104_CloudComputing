@@ -32,7 +32,7 @@ metadata:
   namespace: cloud-computing
 spec:
   serviceName: kafka-hs
-  replicas: 2
+  replicas: 3
   podManagementPolicy: Parallel
   updateStrategy:
     type: RollingUpdate
