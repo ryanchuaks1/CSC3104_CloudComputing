@@ -28,6 +28,7 @@ import 'home_model.dart';
 export 'home_model.dart';
 
 import 'package:geolocator/geolocator.dart';
+import 'dart:convert'; // JSON Convert
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget({
@@ -246,8 +247,14 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
       else
       {
         //TODO: Currently only print, need to pass the location
-        String curr_location_data = await curr_handler.getCurrentLocation();
-        print("LOCATION DATA: " + curr_location_data);
+        String location_data_string = await curr_handler.getCurrentLocation();
+        print("LOCATION DATA: " + location_data_string);
+
+        //Getting the String into a Json
+        Map<String, dynamic> location_data = json.decode(location_data_string);
+
+        print("LOCATION DATA IN JSON: ${location_data["latitude"]}, ${location_data["longitude"]}");
+
       }
     }
   }
