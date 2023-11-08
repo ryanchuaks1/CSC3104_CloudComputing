@@ -173,16 +173,12 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     print(curr_device_data_list.length);
 
     // gRPC can be unreliable at time result in an empty list from the buffer
-    // Hence, when there is nothing in the list, dotn update
-    if (curr_device_data_list.length != 0) {
+    //Check if there are new subscribers by comparing old and new length
+    if (curr_device_data_list.length > curr_list_length_all_devices) {
+      //If there is a difference, resubscribe
       _devices = curr_device_data_list;
-
-      //Check if there are new subscribers by comparing old and new length
-      if (_devices.length != curr_list_length_all_devices) {
-        //If there is a difference, resubscribe
-        subscribeToAllDevices();
-        curr_list_length_all_devices = _devices.length;
-      }
+      subscribeToAllDevices();
+      curr_list_length_all_devices = _devices.length;
     }
 
     setState(() {});
