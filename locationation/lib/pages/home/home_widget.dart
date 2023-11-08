@@ -309,6 +309,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   }
 
   Future scanBLEDevices() async {
+    Position? curr_location = await getCurrentDeviceLocation(); //getCurrentLocation
     ScanResult targetDevice;
     _scanResultsSubscription =
         FlutterBluePlus.scanResults.listen((results) async {
@@ -324,6 +325,21 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
             await receiveData(targetDevice.device);
             print(_value);
+
+            if(_value.isNotEmpty && curr_location != null)
+            {
+              Device curr_pico_device = await Device(
+                userId: "NULL", //Dont need to mention the userid of this pico in when publishing
+                deviceId: _value, 
+                deviceName: _value, 
+                latitude: curr_location.latitude, 
+                longitude: curr_location.longitude
+                );
+
+              final _respond = await ApiService().publishCurrentLocation(curr_pico_device);
+              print("Current Pico Device: ${_respond}");
+            }
+
           } catch (e) {}
         }
       }
