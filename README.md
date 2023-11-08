@@ -18,10 +18,22 @@
 
     `kubectl apply -f ./namespace.yaml`
 
-2. Start cluster
+2. Start backend services
 
-    `kubectl apply -f .`
+    `kubectl apply -f ./zookeeper.yaml`
 
-3. Stop cluster
+    `kubectl apply -f ./kafka.yaml`
+
+    `kubectl apply -f ./mariadb.yaml`
+
+3. Start server services
+
+    `kubectl apply -f ./consumer.yaml`
+
+    `kubectl apply -f ./producer.yaml`
+
+    `kubectl apply -f ./server.yaml`
+
+4. Stop cluster
 
     `kubectl delete -f .`
