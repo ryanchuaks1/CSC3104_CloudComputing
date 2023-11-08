@@ -224,7 +224,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
         }
 
         final uuid = Uuid();
-        curr_handler.subscribeToDevice(uuid.v4(),curr_device.deviceId);
+        curr_handler.subscribeToDevice(uuid.v4(),curr_device.deviceId); 
         print("Subscribed to ${curr_device.deviceId}");
         
       }
@@ -248,12 +248,15 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
       {
         //TODO: Currently only print, need to pass the location
         String location_data_string = await curr_handler.getCurrentLocation();
-        print("LOCATION DATA: " + location_data_string);
+        if (location_data_string != "") {
 
-        //Getting the String into a Json
-        Map<String, dynamic> location_data = json.decode(location_data_string);
+          print("LOCATION DATA: " + location_data_string);
 
-        print("LOCATION DATA IN JSON: ${location_data["latitude"]}, ${location_data["longitude"]}");
+          //Getting the String into a Json
+          Map<String, dynamic> location_data = json.decode(location_data_string);
+
+          print("LOCATION DATA IN JSON: ${location_data["latitude"]}, ${location_data["longitude"]}");
+        }
 
       }
     }
