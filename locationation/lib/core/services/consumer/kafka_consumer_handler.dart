@@ -1,9 +1,12 @@
+import 'dart:io';
 import 'package:grpc/grpc.dart';
 import 'package:intl/number_symbols_data.dart';
 import 'package:locationation/core/services/consumer/kafka_consumer.pbgrpc.dart';
+import 'package:locationation/core/services/constants/app_constants.dart';
 import 'package:uuid/uuid.dart';
 
 import 'dart:collection';
+import 'dart:math';
 import 'package:logging/logging.dart';
 
 final log = Logger('ApiLogger');
@@ -14,9 +17,10 @@ void main() async {
   print("Start Program...\n");
 
   try {
-    KafkaConsumerHandler handler = KafkaConsumerHandler('127.0.0.1', 50051);
+    KafkaConsumerHandler handler = KafkaConsumerHandler();
     final uuid = Uuid();
-    handler.subscribeToDevice(uuid.v4(),"f1740855-6716-11ee-9b42-107b44");
+    handler.subscribeToDevice(uuid.v4(),"fd90e1fce28d8691");
+
   } catch (error) {
     
     print("Error Executing");
@@ -24,23 +28,21 @@ void main() async {
 
 }
 
-
-
 class KafkaConsumerHandler
 {
   //Class Variables
   late Kafka_Consumer_gRPCClient _stub;
   late ClientChannel _channel;
 
-  late Queue<String> _buffer = Queue<String>();
+  late Queue<String> buffer = Queue<String>();
   late String _kafkaIpAddress;
   late int _portNumber;
+  bool isSubscribed = false;
 
-
-  KafkaConsumerHandler(String kafkaIpAddress, int portNumber)
+  KafkaConsumerHandler()
   {
-    _kafkaIpAddress = kafkaIpAddress;
-    _portNumber = portNumber;
+    _kafkaIpAddress = AppConstants.KAFKA_CONSUMER_IPADDRESS;
+    _portNumber = AppConstants.KAFKA_CONSUMER_PORT;
   }
 
   //Private Function
@@ -48,32 +50,30 @@ class KafkaConsumerHandler
   {
     try {
       
-      _buffer.add(location);
+      buffer.add(location);
       return true;
 
     } catch (e) {
       log.warning(e.toString());
       return false;
-
     }
-
   }
 
   String getCurrentLocation()
   {
     try {
       
-      if(_buffer.isNotEmpty)
+      if(buffer.isNotEmpty)
       {
         //Shorten the Buffer if there are more than 20 data location in the queue
-        if(_buffer.length > 20)
+        if(buffer.length > 20)
         {
           for (var i = 0; i < 15; i++) {
-            _buffer.removeFirst();
+            buffer.removeFirst();
           }
         }
 
-        return _buffer.removeFirst();
+        return buffer.removeFirst();
       }
       else
       {
@@ -86,11 +86,20 @@ class KafkaConsumerHandler
     }
   }
 
+   Future<void> subscribeToDevice(String sessionId, String deviceId) async 
+  {
+    if (isSubscribed) {
+      return;
+    }
+    else
+    {
+      _startSubscription(sessionId, deviceId);
+    }
+  }
   //Initialising gRPC connection with the consumer server
-  Future<void> subscribeToDevice(String sessionId, String deviceId) async
+  Future<void> _startSubscription(String sessionId, String deviceId) async
   {
     try {
-
       //Create the Channel
       _channel = ClientChannel(_kafkaIpAddress,
         port: _portNumber,
@@ -110,25 +119,15 @@ class KafkaConsumerHandler
 
       //Print the Reply
       // print('Greeter client received: ${stream.udid}, ${stream.timestamp}, ${stream.location}');
-
       await for (var curr_message in stream) {
-        // Process the received message as needed
-        // print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_message.location}');\
 
-        //print("Getting Location!");
-
-        //Put the Location into the buffer
+        //Check if the messages are empty, if not, enqueue them
         if(curr_message != "")
         {
           _enqueue(curr_message.location);
-
         }
 
-        //Get the location and print it (To be Used Outside)
-        String curr_location = getCurrentLocation();
-
-        print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_location}');
-        print("${_buffer}");
+        print('Received message: ${curr_message.udid} , ${curr_message.timestamp}, ${curr_message.location}');
       }
 
     } catch (error) {
@@ -136,6 +135,8 @@ class KafkaConsumerHandler
     }
     finally
     {
+      //End the Subscription
+      isSubscribed = false;
       await _channel.shutdown();
     } 
   }

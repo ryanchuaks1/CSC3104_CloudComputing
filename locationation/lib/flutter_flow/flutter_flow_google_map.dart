@@ -31,8 +31,9 @@ enum GoogleMarkerColor {
 }
 
 class FlutterFlowMarker {
-  const FlutterFlowMarker(this.markerId, this.location, [this.onTap]);
+  const FlutterFlowMarker(this.markerId, this.markerName, this.location, [this.onTap]);
   final String markerId;
+  final String markerName;
   final latlng.LatLng location;
   final Future Function()? onTap;
 }
@@ -122,6 +123,9 @@ class _FlutterFlowGoogleMapState extends State<FlutterFlowGoogleMap> {
                 (m) => Marker(
                   markerId: MarkerId(m.markerId),
                   position: m.location.toGoogleMaps(),
+                  infoWindow: InfoWindow(
+                    title: m.markerName, // This is the label or name of the marker
+                  ),
                   icon: BitmapDescriptor.defaultMarkerWithHue(
                       googleMarkerColorMap[widget.markerColor]!),
                   onTap: () async {

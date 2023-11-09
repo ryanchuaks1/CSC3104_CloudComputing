@@ -50,11 +50,13 @@ class Device(DeviceServicer):
             }
 
             # Add a new topic for this device
-            added_topic = self._producer.addNewTopic(request.deviceId)
-            print(f"Added New Topic: {added_topic}")
-
             serialize_location_data = json.dumps(location_data)
             published = self._producer.publishLocationToKafka(deviceID=request.deviceId, location=serialize_location_data)
+            if not published:
+                added_topic = self._producer.addNewTopic(request.deviceId)
+                print(f"Added New Topic: {added_topic}")
+                if added_topic:
+                    published = self._producer.publishLocationToKafka(deviceID=request.deviceId, location=serialize_location_data)
             print(f"Location Published: {published}")
             return Reply(result="True", message="Location successfully Published")
 
