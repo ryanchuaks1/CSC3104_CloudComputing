@@ -62,7 +62,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
         // You can define what happens when the marker is tapped here
       },
     ),
-        FlutterFlowMarker(
+    FlutterFlowMarker(
       'marker2',
       'marker2',
       LatLng(1.48,
@@ -271,7 +271,6 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
         //TODO: Currently only print, need to pass the location
 
         //Refresh marker buffer
-        
 
         String location_data_string = await curr_handler.getCurrentLocation();
         if (location_data_string != "") {
@@ -281,8 +280,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
           Map<String, dynamic> location_data =
               json.decode(location_data_string);
 
-          double latitude_location_data = double.parse(location_data["latitude"]);
-          double longitude_location_data = double.parse(location_data["longitude"]);
+          double latitude_location_data =
+              double.parse(location_data["latitude"]);
+          double longitude_location_data =
+              double.parse(location_data["longitude"]);
 
           FlutterFlowMarker curr_marker = FlutterFlowMarker(
             curr_device_id,
@@ -296,7 +297,8 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
           );
 
           markers.add(curr_marker);
-          print("LOCATION DATA IN JSON: ${location_data["latitude"]}, ${location_data["longitude"]}");
+          print(
+              "LOCATION DATA IN JSON: ${location_data["latitude"]}, ${location_data["longitude"]}");
         }
       }
     }
@@ -305,7 +307,8 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   }
 
   Future scanBLEDevices() async {
-    Position? curr_location = await getCurrentDeviceLocation(); //getCurrentLocation
+    Position? curr_location =
+        await getCurrentDeviceLocation(); //getCurrentLocation
     ScanResult targetDevice;
     _scanResultsSubscription =
         FlutterBluePlus.scanResults.listen((results) async {
@@ -322,20 +325,19 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
             await receiveData(targetDevice.device);
             print(_value);
 
-            if(_value.isNotEmpty && curr_location != null)
-            {
+            if (_value.isNotEmpty && curr_location != null) {
               Device curr_pico_device = await Device(
-                userId: "NULL", //Dont need to mention the userid of this pico in when publishing
-                deviceId: _value, 
-                deviceName: _value, 
-                latitude: curr_location.latitude, 
-                longitude: curr_location.longitude
-                );
+                  userId:
+                      "NULL", //Dont need to mention the userid of this pico in when publishing
+                  deviceId: _value,
+                  deviceName: _value,
+                  latitude: curr_location.latitude,
+                  longitude: curr_location.longitude);
 
-              final _respond = await ApiService().publishCurrentLocation(curr_pico_device);
+              final _respond =
+                  await ApiService().publishCurrentLocation(curr_pico_device);
               print("Current Pico Device: ${_respond}");
             }
-
           } catch (e) {}
         }
       }
@@ -390,6 +392,9 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
     publishing_timer!.cancel();
     publishing_timer = null;
+
+    get_location_timer!.cancel();
+    get_location_timer = null;
 
     _scanResultsSubscription.cancel();
   }
