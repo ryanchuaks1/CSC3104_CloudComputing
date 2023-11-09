@@ -116,7 +116,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
     timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getAllDevices());
     timer_2 =
-        Timer.periodic(Duration(seconds: 60), (Timer t) => scanBLEDevices());
+        Timer.periodic(Duration(seconds: 15), (Timer t) => scanBLEDevices());
 
     ApiService().getDeviceId().then((value) {
       setState(() {
@@ -309,19 +309,21 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   }
 
   Future scanBLEDevices() async {
+    print("Test if running");
     Position? curr_location =
         await getCurrentDeviceLocation(); //getCurrentLocation
     ScanResult targetDevice;
-    _scanResultsSubscription =
-        FlutterBluePlus.scanResults.listen((results) async {
-      for (ScanResult r in results) {
-        if (r.advertisementData.localName == "mpy-uart") {
-          targetDevice = r;
-          targetDevice.device.connectionState
-              .listen((BluetoothConnectionState state) {
-            if (state == BluetoothConnectionState.disconnected) {}
-          });
-          try {
+    try {
+      _scanResultsSubscription =
+          FlutterBluePlus.scanResults.listen((results) async {
+        for (ScanResult r in results) {
+          if (r.advertisementData.localName == "mpy-uart") {
+            print("Yes found Pico Device");
+            targetDevice = r;
+            targetDevice.device.connectionState
+                .listen((BluetoothConnectionState state) {
+              if (state == BluetoothConnectionState.disconnected) {}
+            });
             await targetDevice.device.connect();
 
             await receiveData(targetDevice.device);
@@ -340,10 +342,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                   await ApiService().publishCurrentLocation(curr_pico_device);
               print("Current Pico Device: ${_respond}");
             }
-          } catch (e) {}
+          }
         }
-      }
-    });
+      });
+    } catch (e) {}
 
     // Start scanning
     await FlutterBluePlus.startScan();
@@ -397,8 +399,6 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
     get_location_timer!.cancel();
     get_location_timer = null;
-
-    _scanResultsSubscription.cancel();
   }
 
   @override
