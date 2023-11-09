@@ -93,7 +93,7 @@ services:
       - kafka
       - producer-service
     command: npm start
-  
+
   producer-service:
     build:
       context: ./kafka-producer

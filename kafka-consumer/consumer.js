@@ -3,7 +3,7 @@ class Kafka_Consumer{
         const { Kafka } = require('kafkajs');
         this._kafka_conn = new Kafka({
             clientId: client_id,
-            brokers: ['kafka:9092']
+            brokers: ['kafka-hs:9092']
         });
         this._consumer = this._kafka_conn.consumer({
             groupId: group_id
@@ -16,7 +16,7 @@ class Kafka_Consumer{
         const admin_client = new kafka_admin.Kafka_Admin('exporting-topic-admin');
         var count = 0;
         var success = true;
-        
+
         try {
             const topics = await admin_client.list_topics();
 
@@ -43,7 +43,7 @@ class Kafka_Consumer{
                         console.log(data);
 
                         write_stream.write(JSON.stringify(data) + "\n");
-                        
+
                         count++;
                         if(count === 5){
                             write_stream.end();
@@ -73,7 +73,7 @@ class Kafka_Consumer{
                 topic: udid,
                 fromBeginning: true,
             });
-    
+
             await this._consumer.run({
                 eachMessage: async({ topic, partition, message }) => {
                     // const data = {

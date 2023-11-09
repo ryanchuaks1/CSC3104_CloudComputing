@@ -1,8 +1,8 @@
-import grpc
 import uuid
 import json
-from concurrent import futures
 import mysql.connector
+from concurrent import futures
+import grpc
 from device_pb2 import Item, Reply, UserInstance
 from device_pb2_grpc import DeviceServicer, add_DeviceServicer_to_server
 
@@ -16,8 +16,8 @@ class Device(DeviceServicer):
     def __init__(self) -> None:
         # Define the MySQL connection parameters
         self.MYSQL_HOST = "mariadb"
-        self.MYSQL_USER = "user"
-        self.MYSQL_PASSWORD = "password"
+        self.MYSQL_USER = "root"
+        self.MYSQL_PASSWORD = "secret"
         self.MYSQL_DATABASE = "mysql_db"
         self.KAFKA_ADDRESS = "producer-service:50052"
 
@@ -45,7 +45,7 @@ class Device(DeviceServicer):
     def publish_current_location(self, request, context):
         try:
             location_data = {
-                'latitude' : request.latitude , 
+                'latitude' : request.latitude ,
                 'longitude' : request.longitude
             }
 
@@ -57,7 +57,7 @@ class Device(DeviceServicer):
             published = self._producer.publishLocationToKafka(deviceID=request.deviceId, location=serialize_location_data)
             print(f"Location Published: {published}")
             return Reply(result="True", message="Location successfully Published")
-        
+
         except Exception as e:
             return Reply(result="False", message=f"Error: {str(e)}")
 
@@ -90,7 +90,7 @@ class Device(DeviceServicer):
             return Reply(result="True", message="Device added successfully!")
         except Exception as e:
             return Reply(result="False", message=f"Error: {str(e)}")
-        
+
 # Use to delete a device from the sql table
     def delete_device(self, request, context):
         query = "DELETE FROM devices WHERE device_id = %s"
@@ -121,14 +121,14 @@ class Device(DeviceServicer):
         print(request.userName)
         insert_query = "INSERT INTO users (user_id, user_name, user_password_hash) VALUES (%s, %s, %s)"
         insert_values = (unique_user_id, request.userName, request.userPasswordHash)
-        
+
         try:
             self.cursor.execute(insert_query, insert_values)
             self.connection.commit()
             return Reply(result="True", message="User account created successfully!")
         except Exception as e:
             return Reply(result="False", message=f"Error: {str(e)}")
-    
+
     def login(self, request, context):
         print(request.userName)
         select_query = "SELECT * FROM users WHERE user_name = %s"
@@ -142,11 +142,11 @@ class Device(DeviceServicer):
 
         if result == None:
             return UserInstance(result="False")
-        
+
         ## Validate user here
         if (result[2] == request.userPasswordHash):
             return UserInstance(result="True", userId=result[0], userName=result[1])
-        
+
         return UserInstance(result="False, Invalid Username or Password")
 
 

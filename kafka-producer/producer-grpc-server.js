@@ -1,5 +1,5 @@
 const PROTO_PATH = __dirname + '/kafka_producer.proto';
-const SERVER_SOCKET = "producer-service:50052";
+const SERVER_SOCKET = "0.0.0.0:50052";
 const VOLUME_PATH = __dirname + '/data';
 
 //var parseArgs = require('minimist');
@@ -28,7 +28,7 @@ async function Add_New_Location(call, callback){
 
 async function Add_New_Topic(call, callback){
     const new_admin = new kafka_admin.Kafka_Admin('kafka-admin');
-        
+
     var topic_exist = await new_admin.check_topic(call.request.udid);
 
     if(!topic_exist){
