@@ -45,7 +45,7 @@ class _HomePageState extends State<HomePage> {
     _deviceIdController = TextEditingController();
 
     timer =
-        Timer.periodic(Duration(seconds: 30), (Timer t) => scanBLEDevices());
+        Timer.periodic(Duration(seconds: 60), (Timer t) => scanBLEDevices());
   }
 
   Future scanBLEDevices() async {

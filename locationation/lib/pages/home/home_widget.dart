@@ -52,26 +52,26 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
   List<FlutterFlowMarker> markers = [
-    FlutterFlowMarker(
-      'marker1',
-      'marker1',
-      LatLng(1.38,
-          103.8), // Use the LatLng class from the FlutterFlowMarker package
-      () async {
-        // Optional onTap function
-        // You can define what happens when the marker is tapped here
-      },
-    ),
-    FlutterFlowMarker(
-      'marker2',
-      'marker2',
-      LatLng(1.48,
-          103.8), // Use the LatLng class from the FlutterFlowMarker package
-      () async {
-        // Optional onTap function
-        // You can define what happens when the marker is tapped here
-      },
-    ),
+    // FlutterFlowMarker(
+    //   'marker1',
+    //   'marker1',
+    //   LatLng(1.38,
+    //       103.8), // Use the LatLng class from the FlutterFlowMarker package
+    //   () async {
+    //     // Optional onTap function
+    //     // You can define what happens when the marker is tapped here
+    //   },
+    // ),
+    // FlutterFlowMarker(
+    //   'marker2',
+    //   'marker2',
+    //   LatLng(1.48,
+    //       103.8), // Use the LatLng class from the FlutterFlowMarker package
+    //   () async {
+    //     // Optional onTap function
+    //     // You can define what happens when the marker is tapped here
+    //   },
+    // ),
     // Add more markers as needed
   ];
 
@@ -116,7 +116,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
     timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getAllDevices());
     timer_2 =
-        Timer.periodic(Duration(seconds: 10), (Timer t) => scanBLEDevices());
+        Timer.periodic(Duration(seconds: 60), (Timer t) => scanBLEDevices());
 
     ApiService().getDeviceId().then((value) {
       setState(() {
@@ -163,14 +163,16 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     );
   }
 
-  static int curr_list_length_all_devices = 0;
+  int curr_list_length_all_devices = 0;
 
   Future<List<DeviceNew>> getAllDevices() async {
     print("Test");
 
     List<DeviceNew> curr_device_data_list =
         await ApiService().getAllDevices(widget.current_user);
+    print("Length is:");
     print(curr_device_data_list.length);
+    print(curr_list_length_all_devices);
 
     // gRPC can be unreliable at time result in an empty list from the buffer
     //Check if there are new subscribers by comparing old and new length
