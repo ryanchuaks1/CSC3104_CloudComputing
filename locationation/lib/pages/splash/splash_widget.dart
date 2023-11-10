@@ -99,7 +99,7 @@ class _SplashWidgetState extends State<SplashWidget> {
                       ),
                     ),
                     Text(
-                      'Never lose your shit again',
+                      'Never lose your stuff again',
                       style:
                           FlutterFlowTheme.of(context).headlineSmall.override(
                                 fontFamily: 'Work Sans',

@@ -9,19 +9,40 @@ class Kafka_Admin{
     }
 
     async list_topics(){
+        var topics = null;
+        
         try {
             await this._admin.connect();
-            const topics = await this._admin.listTopics();
-            await this._admin.disconnect();
+            topics = await this._admin.listTopics();
             console.log("Topics: " + topics);
-            return topics;
         } catch (error) {
-            console.error("Error: " + error.message);
-            await this._admin.disconnect();
-            return null;
+            console.error("Error from list_topics(): " + error.message);
         }
+        finally{
+            await this._admin.disconnect();
+        }
+        return topics;
     }
 
+    async get_latest_message(topic){
+        var latest_msg = null;
+        try{
+            await this._admin.connect();
+            var partition_offsets = await this._admin.fetchTopicOffsets(topic);
+            if(partition_offsets.length > 0){
+                latest_msg = partition_offsets[0];
+                console.log("Topic offset from admin: " + latest_msg.offset);
+            }
+        }
+        catch(error){
+            console.error("Error from get_latest_message(): " + error.message);
+        }
+        finally{
+            await this._admin.disconnect();
+        }
+
+        return latest_msg;
+    }
 
     async check_topic(udid){
         var topic_exist = false;
@@ -35,7 +56,7 @@ class Kafka_Admin{
             }
         }
         catch(error){
-            console.error("Error: " + error.message);
+            console.error("Error from check_topic(): " + error.message);
         }
         finally{
             await this._admin.disconnect();
@@ -66,7 +87,7 @@ class Kafka_Admin{
 
         }
         catch(error){
-            console.error("Error: " + error.message);
+            console.error("Error from add_new_topic(): " + error.message);
         }
         finally{
             await this._admin.disconnect();

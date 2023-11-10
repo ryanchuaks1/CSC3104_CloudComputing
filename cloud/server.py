@@ -8,10 +8,6 @@ from device_pb2_grpc import DeviceServicer, add_DeviceServicer_to_server
 
 import kafkaProducer as kp
 
-#Testing Variables:
-temp_lat = "10.000000"
-temp_long = "20.00000"
-
 class Device(DeviceServicer):
     def __init__(self) -> None:
         # Define the MySQL connection parameters
@@ -38,6 +34,27 @@ class Device(DeviceServicer):
         except Exception as e:
             print("An error occurred:", e)
 
+        try:
+            # Create users table
+            user_query = """CREATE TABLE IF NOT EXISTS `users` (
+                `user_id` VARCHAR(255) NOT NULL,
+                `user_name` VARCHAR(255) NOT NULL,
+                `user_password_hash` VARCHAR(255) NOT NULL,
+                PRIMARY KEY (`user_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"""
+            self.cursor.execute(user_query)
+            # Create devices table
+            device_query = """CREATE TABLE IF NOT EXISTS `devices` (
+                `device_id` VARCHAR(255) NOT NULL,
+                `user_id` VARCHAR(255) NOT NULL,
+                PRIMARY KEY (`device_id`),
+                FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"""
+            self.cursor.execute(device_query)
+            print("Tables created successfully!")
+        except Exception as e:
+            print("An error occurred:", e)
+
 #Publish Location of current device
 #  - Get the Location of the current request
 #  - Serialize it into Json
@@ -50,11 +67,13 @@ class Device(DeviceServicer):
             }
 
             # Add a new topic for this device
-            added_topic = self._producer.addNewTopic(request.deviceId)
-            print(f"Added New Topic: {added_topic}")
-
             serialize_location_data = json.dumps(location_data)
             published = self._producer.publishLocationToKafka(deviceID=request.deviceId, location=serialize_location_data)
+            if not published:
+                added_topic = self._producer.addNewTopic(request.deviceId)
+                print(f"Added New Topic: {added_topic}")
+                if added_topic:
+                    published = self._producer.publishLocationToKafka(deviceID=request.deviceId, location=serialize_location_data)
             print(f"Location Published: {published}")
             return Reply(result="True", message="Location successfully Published")
 

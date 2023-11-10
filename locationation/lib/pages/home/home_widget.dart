@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:locationation/backend/schema/util/extra.dart';
@@ -6,6 +7,7 @@ import 'package:locationation/core/models/device_list_model.dart';
 import 'package:locationation/core/models/device_model.dart';
 import 'package:locationation/core/models/device_new_model.dart';
 import 'package:locationation/core/services/api_service.dart';
+import 'package:locationation/core/services/consumer/kafka_consumer_handler.dart';
 
 import '/backend/api_requests/api_calls.dart';
 import '/backend/schema/structs/index.dart';
@@ -22,8 +24,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:uuid/uuid.dart';
 import 'home_model.dart';
 export 'home_model.dart';
+
+import 'package:geolocator/geolocator.dart';
+import 'dart:convert'; // JSON Convert
 
 class HomeWidget extends StatefulWidget {
   const HomeWidget({
@@ -45,23 +51,42 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
 
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  //Device Currently for Testing
-  Device curr_device = Device(
-      userId: "test_user",
-      deviceId: "f1740855-6716-11ee-9b42-107b44",
-      deviceName: "Testing_device",
-      latitude: double.parse("10.0"),
-      longitude: double.parse("20.0"));
+  List<FlutterFlowMarker> markers = [
+    // FlutterFlowMarker(
+    //   'marker1',
+    //   'marker1',
+    //   LatLng(1.38,
+    //       103.8), // Use the LatLng class from the FlutterFlowMarker package
+    //   () async {
+    //     // Optional onTap function
+    //     // You can define what happens when the marker is tapped here
+    //   },
+    // ),
+    // FlutterFlowMarker(
+    //   'marker2',
+    //   'marker2',
+    //   LatLng(1.48,
+    //       103.8), // Use the LatLng class from the FlutterFlowMarker package
+    //   () async {
+    //     // Optional onTap function
+    //     // You can define what happens when the marker is tapped here
+    //   },
+    // ),
+    // Add more markers as needed
+  ];
 
   //Timer
   Timer? timer;
   Timer? publishing_timer;
   Timer? timer_2;
+  Timer? get_location_timer;
 
   //Device ID
-  String? _deviceId;
+  String? _thisDeviceID;
+  Device? current_device_object;
 
   List<DeviceNew> _devices = [];
+  Map<String, KafkaConsumerHandler> _deviceSubcribers = {};
 
   String _value = "";
 
@@ -90,18 +115,36 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     _model = createModel(context, () => HomeModel());
 
     timer = Timer.periodic(Duration(seconds: 5), (Timer t) => getAllDevices());
-
-    publishing_timer = Timer.periodic(
-        Duration(seconds: 5), (Timer t) => publishDeviceLocation());
     timer_2 =
-        Timer.periodic(Duration(seconds: 10), (Timer t) => scanBLEDevices());
+        Timer.periodic(Duration(seconds: 15), (Timer t) => scanBLEDevices());
 
     ApiService().getDeviceId().then((value) {
       setState(() {
-        _deviceId = value;
-        print('Device ID: $value'); 
+        _thisDeviceID = value;
+        print('########################DEVICE ID: $value');
+
+        String curr_device_id = value ?? "";
+        if (curr_device_id != "") {
+          Device newdevice = Device(
+              userId: widget.current_user,
+              deviceId: curr_device_id,
+              deviceName: widget.current_user + "'s Device",
+              latitude: double.parse("0.0"),
+              longitude: double.parse("0.0"));
+
+          ApiService().addNewDevice(newdevice);
+          current_device_object = newdevice;
+        } else {
+          print("Fail to add current Device");
+        }
       });
     });
+
+    publishing_timer = Timer.periodic(
+        Duration(seconds: 15), (Timer t) => publishDeviceLocation());
+
+    get_location_timer = Timer.periodic(
+        Duration(seconds: 5), (Timer t) => getUpdatedDeviceLocations());
 
     // On page load action.
     // SchedulerBinding.instance.addPostFrameCallback((_) async {
@@ -120,43 +163,189 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     );
   }
 
+  int curr_list_length_all_devices = 0;
+
   Future<List<DeviceNew>> getAllDevices() async {
     print("Test");
-    _devices = await ApiService().getAllDevices(widget.current_user);
-    print(_devices.length);
+
+    List<DeviceNew> curr_device_data_list =
+        await ApiService().getAllDevices(widget.current_user);
+    print("Length is:");
+    print(curr_device_data_list.length);
+    print(curr_list_length_all_devices);
+
+    // gRPC can be unreliable at time result in an empty list from the buffer
+    //Check if there are new subscribers by comparing old and new length
+    if (curr_device_data_list.length > curr_list_length_all_devices) {
+      //If there is a difference, resubscribe
+      _devices = curr_device_data_list;
+      subscribeToAllDevices();
+      curr_list_length_all_devices = _devices.length;
+    }
+
     setState(() {});
     return _devices;
   }
 
+  Future<Position?> getCurrentDeviceLocation() async {
+    try {
+      // Request permission to access the device's location
+      LocationPermission permission = await Geolocator.requestPermission();
+
+      if (permission == LocationPermission.denied) {
+        return null;
+      }
+
+      // Get the current location
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      return position;
+    } catch (e) {
+      print("Error getting location: $e");
+      return null;
+    }
+  }
+
+  //Publishing Location Working
   Future<void> publishDeviceLocation() async {
     print("DEV MSG: Publishing Device Location");
 
     //TODO: Device ID will be replaces with a getThisDevice Function
+    Position? curr_location = await getCurrentDeviceLocation();
 
-    final _respond = await ApiService().publishCurrentLocation(curr_device);
+    print('########################DEVICE ID: ${_thisDeviceID}');
+    print('########################DEVICE ID: ${_thisDeviceID}');
+    print('########################DEVICE ID: ${_thisDeviceID}');
+
+    if (curr_location == null)
+      return; //return since there is no location to publish
+
+    current_device_object!.latitude = curr_location.latitude;
+    current_device_object!.longitude = curr_location.longitude;
+
+    print(
+        "Publishing to ${current_device_object!.deviceId} : Latitude(${curr_location.latitude}), Longitude(${curr_location.longitude})");
+
+    if (current_device_object!.deviceId == "") {
+      print("ERROR GETTING DEVICE ID");
+    }
+
+    print("DEVICE TO PUBLISH: ${current_device_object!.deviceId}");
+    final _respond =
+        await ApiService().publishCurrentLocation(current_device_object!);
     print("Success: ${_respond}");
   }
 
+  //Subscribe to all the devices in the _devices list
+  Future<void> subscribeToAllDevices() async {
+    try {
+      for (DeviceNew curr_device in _devices) {
+        KafkaConsumerHandler? curr_handler =
+            _deviceSubcribers[curr_device.deviceId];
+
+        if (curr_handler == null) {
+          curr_handler = KafkaConsumerHandler();
+          //Add a list to reference each device later
+          _deviceSubcribers[curr_device.deviceId] = curr_handler;
+        }
+
+        final uuid = Uuid();
+        curr_handler.subscribeToDevice(uuid.v4(), curr_device.deviceId);
+        print("Subscribed to ${curr_device.deviceId}");
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+  }
+
+  //Get all teh Updated Device Locations
+  Future<void> getUpdatedDeviceLocations() async {
+    for (String curr_device_id in _deviceSubcribers.keys) {
+      KafkaConsumerHandler? curr_handler = _deviceSubcribers[curr_device_id];
+
+      if (curr_handler == null) {
+        //If there is a null handler, resubscribe
+        subscribeToAllDevices();
+        return;
+      } else {
+        //TODO: Currently only print, need to pass the location
+
+        //Refresh marker buffer
+
+        String location_data_string = await curr_handler.getCurrentLocation();
+        if (location_data_string != "") {
+          print("LOCATION DATA: " + location_data_string);
+
+          //Getting the String into a Json
+          Map<String, dynamic> location_data =
+              json.decode(location_data_string);
+
+          double latitude_location_data =
+              double.parse(location_data["latitude"]);
+          double longitude_location_data =
+              double.parse(location_data["longitude"]);
+
+          FlutterFlowMarker curr_marker = FlutterFlowMarker(
+            curr_device_id,
+            curr_device_id,
+            LatLng(latitude_location_data,
+                longitude_location_data), // Use the LatLng class from the FlutterFlowMarker package
+            () async {
+              // Optional onTap function
+              // You can define what happens when the marker is tapped here
+            },
+          );
+
+          markers.add(curr_marker);
+          print(
+              "LOCATION DATA IN JSON: ${location_data["latitude"]}, ${location_data["longitude"]}");
+        }
+      }
+    }
+
+    setState(() {});
+  }
+
   Future scanBLEDevices() async {
+    print("Test if running");
+    Position? curr_location =
+        await getCurrentDeviceLocation(); //getCurrentLocation
     ScanResult targetDevice;
-    _scanResultsSubscription =
-        FlutterBluePlus.scanResults.listen((results) async {
-      for (ScanResult r in results) {
-        if (r.advertisementData.localName == "mpy-uart") {
-          targetDevice = r;
-          targetDevice.device.connectionState
-              .listen((BluetoothConnectionState state) {
-            if (state == BluetoothConnectionState.disconnected) {}
-          });
-          try {
+    try {
+      _scanResultsSubscription =
+          FlutterBluePlus.scanResults.listen((results) async {
+        for (ScanResult r in results) {
+          if (r.advertisementData.localName == "mpy-uart") {
+            print("Yes found Pico Device");
+            targetDevice = r;
+            targetDevice.device.connectionState
+                .listen((BluetoothConnectionState state) {
+              if (state == BluetoothConnectionState.disconnected) {}
+            });
             await targetDevice.device.connect();
 
             await receiveData(targetDevice.device);
             print(_value);
-          } catch (e) {}
+
+            if (_value.isNotEmpty && curr_location != null) {
+              Device curr_pico_device = await Device(
+                  userId:
+                      "NULL", //Dont need to mention the userid of this pico in when publishing
+                  deviceId: _value,
+                  deviceName: _value,
+                  latitude: curr_location.latitude,
+                  longitude: curr_location.longitude);
+
+              final _respond =
+                  await ApiService().publishCurrentLocation(curr_pico_device);
+              print("Current Pico Device: ${_respond}");
+            }
+          }
         }
-      }
-    });
+      });
+    } catch (e) {}
 
     // Start scanning
     await FlutterBluePlus.startScan();
@@ -208,7 +397,8 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
     publishing_timer!.cancel();
     publishing_timer = null;
 
-    _scanResultsSubscription.cancel();
+    get_location_timer!.cancel();
+    get_location_timer = null;
   }
 
   @override
@@ -257,6 +447,7 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                       showMapToolbar: false,
                       showTraffic: false,
                       centerMapOnMarkerTap: true,
+                      markers: markers,
                     ),
                   ),
                   Align(
@@ -417,7 +608,10 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            devicesItem.deviceId,
+                                            (_thisDeviceID ==
+                                                    devicesItem.deviceId)
+                                                ? "Current Device"
+                                                : "Another Device",
                                             style: FlutterFlowTheme.of(context)
                                                 .headlineSmall
                                                 .override(
@@ -426,7 +620,8 @@ class _HomeWidgetState extends State<HomeWidget> with TickerProviderStateMixin {
                                                 ),
                                           ),
                                           Text(
-                                            'User',
+                                            'Device ID: ' +
+                                                devicesItem.deviceId,
                                             style: FlutterFlowTheme.of(context)
                                                 .bodySmall
                                                 .override(
