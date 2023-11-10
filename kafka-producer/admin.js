@@ -3,7 +3,7 @@ class Kafka_Admin{
         const { Kafka } = require('kafkajs');
         this._kafka_conn = new Kafka({
             clientId: client_id,
-            brokers: ['kafka:9092']
+            brokers: ['kafka-hs:9092']
         })
         this._admin = this._kafka_conn.admin();
     }
@@ -49,7 +49,7 @@ class Kafka_Admin{
         try{
             await this._admin.connect();
             const topics = await this._admin.listTopics();
-            
+
             console.log("List of topics: " + topics);
             if(topics.includes(udid)){
                 topic_exist = true;

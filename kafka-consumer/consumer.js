@@ -6,7 +6,7 @@ class Kafka_Consumer{
         const { Kafka } = require('kafkajs');
         this._kafka_conn = new Kafka({
             clientId: client_id,
-            brokers: ['kafka:9092']
+            brokers: ['kafka-hs:9092']
         });
         this._consumer = this._kafka_conn.consumer({
             groupId: group_id
@@ -22,7 +22,7 @@ class Kafka_Consumer{
         const fs = require('fs');
         const admin_client = new kafka_admin.Kafka_Admin('export-topic-admin');
         var success = true;
-        
+
         try {
             const topics = await admin_client.list_topics();
 

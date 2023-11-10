@@ -3,7 +3,7 @@ class Kafka_Producer{
         const { Kafka } = require('kafkajs');
         this._kafka_conn = new Kafka({
             clientId: client_id,
-            brokers: ['kafka:9092']
+            brokers: ['kafka-hs:9092']
         });
         this._producer = this._kafka_conn.producer();
     }
@@ -16,37 +16,37 @@ class Kafka_Producer{
         const admin_client = new kafka_admin.Kafka_Admin('restoring-topic-admin');
 
         var success = true;
-        
+
         try {
             const topic_files = fs.readdirSync(dir_path);
 
             for (const topic_file of topic_files){
                 const file_path = path.join(dir_path, topic_file);
                 const file_status = fs.statSync(file_path);
-    
+
                 if(!file_status.isDirectory()){
                     const topic_name = path.parse(topic_file).name;
                     var topic_res = await admin_client.add_new_topic(topic_name);
 
                     console.log("Result of adding topic: " + topic_res);
-    
+
                     if(topic_res){
                         const file_stream = fs.createReadStream(file_path);
                         const read_line = readline.createInterface({
                             input: file_stream,
                             crlfDelay: Infinity
                         });
-        
+
                         for await (const line of read_line){
                             const message = JSON.parse(line);
                             var msg_res = await this.update_location(topic_name, message.timestamp, message.location);
-    
+
                             if(!msg_res){
                                 success = false;
                             }
                         }
                     }
-                    
+
                     else{
                         success = false;
                     }
